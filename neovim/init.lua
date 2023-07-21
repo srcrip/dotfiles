@@ -469,16 +469,43 @@ require('lazy').setup({
       require('notify').setup()
     end
   },
-  -- TODO: replace with copilot.lua
   {
-    'github/copilot.vim',
-    config = function()
-      vim.g.copilot_node_command = "~/.asdf/installs/nodejs/16.18.1/bin/node"
-      -- TODO: I think I know a way to check if a copilot suggestion is pending, so look into that later.
-      -- vim.g.copilot_no_tab_map = true
-      -- vim.g.copilot_assume_mapped = true
-      -- vim.g.copilot_tab_fallback = ""
-    end
+    'zbirenbaum/copilot.lua',
+    opts = {
+      panel = {
+        enabled = true,
+        auto_refresh = false,
+        keymap = {
+          jump_prev = "[[",
+          jump_next = "]]",
+          accept = "<CR>",
+          refresh = "gr",
+          open = "<M-CR>"
+        },
+        layout = {
+          position = "right",
+          ratio = 0.4
+        },
+      },
+      suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        debounce = 75,
+        keymap = {
+          accept = "<M-l>",
+          accept_word = false,
+          accept_line = false,
+          next = "<M-]>",
+          prev = "<M-[>",
+          dismiss = "<C-]>",
+        },
+      },
+      filetypes = {
+        ["."] = true,
+      },
+      copilot_node_command = '/Users/andrew/.asdf/installs/nodejs/16.18.1/bin/node',
+      server_opts_overrides = {},
+    }
   },
   {
     'akinsho/bufferline.nvim',
