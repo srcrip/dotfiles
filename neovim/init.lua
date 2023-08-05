@@ -318,7 +318,11 @@ require('lazy').setup({
   },
   'tpope/vim-repeat',
   'tpope/vim-eunuch',
-  'tpope/vim-commentary',
+  -- 'tpope/vim-commentary',
+  {
+    'numToStr/Comment.nvim',
+    opts = {}
+  },
   'mg979/vim-visual-multi',
   {
     'mbbill/undotree',
@@ -430,6 +434,12 @@ require('lazy').setup({
     end
   },
   {
+    'glts/vim-textobj-comment',
+    dependencies = {
+      'kana/vim-textobj-user',
+    },
+  },
+  {
     'nvim-treesitter/nvim-treesitter',
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
@@ -456,7 +466,18 @@ require('lazy').setup({
           },
           auto_install = true,
           highlight = { enable = false },
-          -- indent = { enable = true, disable = { 'python' } },
+          -- textobjects = {
+          --   select = {
+          --     enable = true,
+          --     lookahead = true,
+          --     keymaps = {
+          --       ['af'] = '@function.outer',
+          --       ['if'] = '@function.inner',
+          --       ['ac'] = '@comment.outer',
+          --       ['ic'] = '@comment.inner',
+          --     }
+          --   }
+          -- }
         }
     end,
   },
@@ -492,7 +513,7 @@ require('lazy').setup({
         auto_trigger = true,
         debounce = 75,
         keymap = {
-          accept = "<M-l>",
+          accept = "<tab>",
           accept_word = false,
           accept_line = false,
           next = "<M-]>",
