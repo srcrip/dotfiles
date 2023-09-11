@@ -1,3 +1,5 @@
+vim.cmd("command! Retab set et|retab")
+
 vim.o.hlsearch = true
 vim.o.textwidth = 120
 vim.o.number = true
@@ -58,7 +60,7 @@ set nowritebackup
 set shortmess+=c
 set cmdheight=2
 set showtabline=2
-set fillchars+=diff:\ 
+set fillchars+=diff:\
 set diffopt=internal,filler,algorithm:patience,foldcolumn:0,context:4
 set laststatus=3
 autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
@@ -72,7 +74,7 @@ set foldexpr=nvim_treesitter#foldexpr()
 set foldtext=getline(v:foldstart).'...'.trim(getline(v:foldend))
 set foldnestmax=5
 set foldminlines=2
-set fillchars+=fold:\ 
+set fillchars+=fold:\
 
 map <F1> <Esc>
 imap <F1> <Esc>
