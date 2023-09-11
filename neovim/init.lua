@@ -2,98 +2,176 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
-      "git",
-      "clone",
-      "--filter=blob:none",
-      "https://github.com/folke/lazy.nvim.git",
-      "--branch=stable", -- latest stable release
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
     lazypath,
   })
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Make sure leader is setup before loading lazy.nvim
 vim.g.mapleader = " "
+vim.o.shell = "/bin/bash"
 
 -- Then load the rest of settings
-require('modules.settings')
+require("modules.settings")
 
-function map(mode, lhs, rhs, opts)
+function map(mode, keys, func, opts)
   local options = { noremap = true }
+
   if opts then
     options = vim.tbl_extend("force", options, opts)
   end
-  vim.api.nvim_set_keymap(mode, lhs, rhs, options)
+
+  vim.keymap.set(mode, keys, func, options)
 end
 
-vim.opt.fillchars:append { diff = "╱" }
+vim.opt.fillchars:append({ diff = "╱" })
 
 -- map('n', '<leader>r', vim.diagnostic.reset)
-vim.keymap.set('n', '<space>r', vim.diagnostic.reset)
+vim.keymap.set("n", "<space>r", vim.diagnostic.reset)
 
-FOO = 'your_augroup_name'
+FOO = "your_augroup_name"
 vim.api.nvim_create_augroup(FOO, { clear = true })
 
-require('lazy').setup({
-  'sheerun/vim-polyglot',
-  'svermeulen/vim-yoink',
+require("lazy").setup({
+  "sheerun/vim-polyglot",
+  "svermeulen/vim-yoink",
   {
-    'ojroques/nvim-bufdel',
+    "ojroques/nvim-bufdel",
     config = function()
-      require('bufdel').setup {
-        next = 'alternate'
-      }
-    end
+      require("bufdel").setup({
+        next = "alternate",
+      })
+    end,
   },
-  'crusoexia/vim-monokai',
-  'machakann/vim-sandwich',
+  "crusoexia/vim-monokai",
+  -- "machakann/vim-sandwich",
   {
     "windwp/nvim-spectre",
     dependencies = { "nvim-lua/plenary.nvim" },
   },
+  -- {
+  --   "elixir-tools/elixir-tools.nvim",
+  --   version = "*",
+  --   event = { "BufReadPre", "BufNewFile" },
+  --   config = function()
+  --     local elixir = require("elixir")
+  --     local elixirls = require("elixir.elixirls")
+  --
+  --     elixir.setup {
+  --       nextls = { enable = true },
+  --       credo = {},
+  --       elixirls = {
+  --         enable = true,
+  --         settings = elixirls.settings {
+  --           dialyzerEnabled = false,
+  --           enableTestLenses = false,
+  --         },
+  --         on_attach = function(client, bufnr)
+  --           vim.keymap.set("n", "<space>fp", ":ElixirFromPipe<cr>", { buffer = true, noremap = true })
+  --           vim.keymap.set("n", "<space>tp", ":ElixirToPipe<cr>", { buffer = true, noremap = true })
+  --           vim.keymap.set("v", "<space>em", ":ElixirExpandMacro<cr>", { buffer = true, noremap = true })
+  --         end,
+  --       }
+  --     }
+  --   end,
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --   },
+  -- },
+  -- {
+  --   'crusj/bookmarks.nvim',
+  --   keys = {
+  --     { "<tab><tab>", mode = { "n" } },
+  --   },
+  --   branch = 'main',
+  --   dependencies = { 'nvim-web-devicons' },
+  --   config = function()
+  --     require("bookmarks").setup({
+  --       mappings_enabled = true,
+  --       keymap = {
+  --         toggle = "<tab><tab>", -- Toggle bookmarks(global keymap)
+  --         add = "\\z", -- Add bookmarks(global keymap)
+  --         jump = "<CR>", -- Jump from bookmarks(buf keymap)
+  --         delete = "dd", -- Delete bookmarks(buf keymap)
+  --         order = "<space><space>", -- Order bookmarks by frequency or updated_time(buf keymap)
+  --         delete_on_virt = "\\dd", -- Delete bookmark at virt text line(global keymap)
+  --         show_desc = "\\sd", -- show bookmark desc(global keymap)
+  --       },
+  --       width = 0.8, -- Bookmarks window width:  (0, 1]
+  --       height = 0.6, -- Bookmarks window height: (0, 1]
+  --       preview_ratio = 0.4, -- Bookmarks preview window ratio (0, 1]
+  --       preview_ext_enable = false, -- If true, preview buf will add file ext, preview window may be highlighed(treesitter), but may be slower.
+  --       fix_enable = false, -- If true, when saving the current file, if the bookmark line number of the current file changes, try to fix it.
+
+  --       virt_text = "BOOKMARK", -- Show virt text at the end of bookmarked lines
+  --       virt_pattern = { "*" }, -- Show virt text only on matched pattern
+  --       border_style = "single", -- border style: "single", "double", "rounded"
+  --       hl = {
+  --         border = "TelescopeBorder", -- border highlight
+  --         cursorline = "guibg=Gray guifg=White", -- cursorline highlight
+  --       }
+  --     })
+  --     require("telescope").load_extension("bookmarks")
+  --   end
+  -- },
+  -- {
+  --   "cbochs/grapple.nvim",
+  --   dependencies = { "nvim-lua/plenary.nvim" },
+  --   config = function()
+  --     vim.keymap.set("n", "<leader>m", require("grapple").toggle, {})
+
+  --     vim.keymap.set("n", "<leader>j", function()
+  --       require("grapple").select({ key = "{name}" })
+  --     end, {})
+
+  --     vim.keymap.set("n", "<leader><backspace>", function()
+  --       require("grapple").popup_tags()
+  --     end, {})
+
+  --     vim.keymap.set("n", "<leader>J", function()
+  --       require("grapple").toggle({ key = "{name}" })
+  --     end, {})
+
+  --     -- vim.keymap.set("n", "<leader><tab>", function()
+  --     --   require("grapple").tag()
+  --     -- end, {})
+
+  --     -- vim.keymap.set("n", "<leader><s-tab>", function()
+  --     --   require("grapple").untag()
+  --     -- end, {})
+
+  --     vim.keymap.set("n", "<tab>", require("grapple").cycle_forward, {})
+  --     vim.keymap.set("n", "<s-tab>", require("grapple").cycle_backward, {})
+  --   end
+  -- },
+  { "vladdoster/remember.nvim", config = [[ require('remember') ]] },
   {
-    "cbochs/grapple.nvim",
+    "nvim-telescope/telescope.nvim",
+    tag = "0.1.1",
     dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      vim.keymap.set("n", "<leader>m", require("grapple").toggle, {})
-
-      vim.keymap.set("n", "<leader>j", function()
-        require("grapple").select({ key = "{name}" })
-      end, {})
-
-      vim.keymap.set("n", "<leader>J", function()
-        require("grapple").toggle({ key = "{name}" })
-      end, {})
-
-
-      vim.keymap.set("n", "<tab>", require("grapple").cycle_forward, {})
-      vim.keymap.set("n", "<s-tab>", require("grapple").cycle_backward, {})
-    end
-  },
-  { 'vladdoster/remember.nvim', config = [[ require('remember') ]] },
-  {
-    'nvim-telescope/telescope.nvim', tag = '0.1.1',
-    dependencies = { 'nvim-lua/plenary.nvim' },
     config = function()
       -- You dont need to set any of these options. These are the default ones. Only
       -- the loading is important
-      require('telescope').setup {
+      require("telescope").setup({
         extensions = {
           fzf = {
-            fuzzy = true,                    -- false will only do exact matching
-            override_generic_sorter = true,  -- override the generic sorter
-            override_file_sorter = true,     -- override the file sorter
-            case_mode = "smart_case",        -- or "ignore_case" or "respect_case"
+            fuzzy = true,                   -- false will only do exact matching
+            override_generic_sorter = true, -- override the generic sorter
+            override_file_sorter = true,    -- override the file sorter
+            case_mode = "smart_case",       -- or "ignore_case" or "respect_case"
             -- the default case_mode is "smart_case"
-          }
-        }
-      }
+          },
+        },
+      })
       -- To get fzf loaded and working with telescope, you need to call
       -- load_extension, somewhere after setup function:
-      require('telescope').load_extension('fzf')
-    end
+      -- require('telescope').load_extension('fzf')
+    end,
   },
-  { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' },
   {
     "kevinhwang91/nvim-bqf",
   },
@@ -108,10 +186,11 @@ require('lazy').setup({
       "tpope/vim-fugitive",
     },
   },
-  { 'ibhagwan/fzf-lua',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+  {
+    "ibhagwan/fzf-lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
-      require 'fzf-lua'.setup {
+      require("fzf-lua").setup({
         -- fzf_opts = {
         --   -- options are sent as `<left>=<right>`
         --   -- set to `false` to remove a flag
@@ -126,13 +205,13 @@ require('lazy').setup({
         -- },
         winopts = {
           preview = {
-            vertical       = 'down:50%',      -- up|down:size
-            horizontal     = 'right:50%',     -- right|left:size
-          }
-        }
-      }
+            vertical = "down:50%",    -- up|down:size
+            horizontal = "right:50%", -- right|left:size
+          },
+        },
+      })
 
-      vim.cmd [[
+      vim.cmd([[
         function! GetVisualSelection()
           let [line_start, column_start] = getpos("'<")[1:2]
           let [line_end, column_end] = getpos("'>")[1:2]
@@ -147,7 +226,7 @@ require('lazy').setup({
 
           return join(lines, "\n")
         endfunction
-      ]]
+      ]])
       -- map("v", "<space>/", ":FzfLua grep_project <C-R>=GetVisualSelection()<CR><CR>", { silent = true })
       map("v", "<space>/", ":lua require('fzf-lua').grep_visual()<cr>", { silent = true })
       map("n", "<space>/", ":FzfLua grep_project<cr>", { silent = true })
@@ -156,34 +235,36 @@ require('lazy').setup({
       map("n", "<space>fr", ":FzfLua oldfiles<cr>", { silent = true })
       map("n", "<space><space>", ":FzfLua files<cr>", { silent = true })
       map("n", "<space><cr>", ":FzfLua resume<cr>", { silent = true })
-    end
+    end,
   },
+  -- {
+  --   "junegunn/vim-easy-align",
+  --   config = function()
+  --     -- vim.cmd[[
+  --     --   vmap ga <Plug>(EasyAlign)
+  --     --   xmap ga <Plug>(EasyAlign)
+  --     --   nmap ga <Plug>(EasyAlign)
+  --     -- ]]
+  --   end,
+  -- },
   {
-    'junegunn/vim-easy-align',
+    "svermeulen/vim-subversive",
     config = function()
-      -- vim.cmd[[
-      --   vmap ga <Plug>(EasyAlign)
-      --   xmap ga <Plug>(EasyAlign)
-      --   nmap ga <Plug>(EasyAlign)
-      -- ]]
-    end
-  },
-  {
-    'svermeulen/vim-subversive',
-    config = function()
-      vim.cmd [[
+      vim.cmd([[
         nmap s <Plug>(SubversiveSubstitute)
         nmap ss <Plug>(SubversiveSubstituteLine)
         nmap S <Plug>(SubversiveSubstituteToEndOfLine)
         xmap s <Plug>(SubversiveSubstitute)
         xmap p <Plug>(SubversiveSubstitute)
         xmap P <Plug>(SubversiveSubstitute)
-      ]]
-    end
+      ]])
+    end,
   },
   {
-    'notjedi/nvim-rooter.lua',
-    config = function() require 'nvim-rooter'.setup() end
+    "notjedi/nvim-rooter.lua",
+    config = function()
+      require("nvim-rooter").setup()
+    end,
   },
   {
     "vim-test/vim-test",
@@ -192,15 +273,15 @@ require('lazy').setup({
       map("n", "<space>tn", ":TestNearest<cr>", { silent = true })
       map("n", "<space>tl", ":TestLast<cr>", { silent = true })
 
-      vim.cmd [[
+      vim.cmd([[
         function! BufferTermStrategy(cmd)
           exec 'te ' . a:cmd
         endfunction
 
         let g:test#custom_strategies = {'bufferterm': function('BufferTermStrategy')}
         let g:test#strategy = 'bufferterm'
-      ]]
-    end
+      ]])
+    end,
   },
   {
     "nvim-neotest/neotest",
@@ -214,91 +295,281 @@ require('lazy').setup({
       require("neotest").setup({
         adapters = {
           require("neotest-elixir"),
-        }
+        },
       })
-    end
+    end,
   },
   {
-    'kosayoda/nvim-lightbulb',
-    dependencies = 'antoinemadec/FixCursorHold.nvim',
+    "kosayoda/nvim-lightbulb",
+    dependencies = "antoinemadec/FixCursorHold.nvim",
     config = function()
-      require('nvim-lightbulb').setup({
-          autocmd = {
-            enabled = true,
-          }
+      require("nvim-lightbulb").setup({
+        autocmd = {
+          enabled = true,
+        },
       })
-    end
+    end,
   },
-  {
-    "ray-x/lsp_signature.nvim",
-  },
-  -- TODO: Get one of these plugins working better?
-  -- {
-  --   "j-hui/fidget.nvim",
-  --   config = function()
-  --     require"fidget".setup{}
-  --   end
-  -- },
-  -- {
-  --   'nvim-lua/lsp-status.nvim',
-  --   config = function()
-  --     local lsp_status = require('lsp-status')
-  --     lsp_status.config {
-  --       status_symbol = '',
-  --       diagnostics = false,
-  --     }
-  --   end
-  -- },
   {
     "vigoux/notifier.nvim",
     config = function()
-      require'notifier'.setup {
+      require("notifier").setup({
         ignore_messages = {}, -- Ignore message from LSP servers with this name
-        components = {  -- Order of the components to draw from top to bottom (first nvim notifications, then lsp)
-          "nvim",  -- Nvim notifications (vim.notify and such)
-          "lsp"  -- LSP status updates
+        components = {        -- Order of the components to draw from top to bottom (first nvim notifications, then lsp)
+          "nvim",             -- Nvim notifications (vim.notify and such)
+          "lsp",              -- LSP status updates
         },
         notify = {
-          clear_time = 5000, -- Time in milliseconds before removing a vim.notify notification, 0 to make them sticky
+          clear_time = 5000,               -- Time in milliseconds before removing a vim.notify notification, 0 to make them sticky
           min_level = vim.log.levels.INFO, -- Minimum log level to print the notification
         },
-        component_name_recall = false, -- Whether to prefix the title of the notification by the component name
+        component_name_recall = false,     -- Whether to prefix the title of the notification by the component name
         zindex = 50,
+      })
+    end,
+  },
+  {
+    "williamboman/mason.nvim",
+    "williamboman/mason-lspconfig.nvim",
+  },
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      { 'folke/neodev.nvim', lazy = true },
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+      { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
+    }
+  },
+  {
+    "jay-babu/mason-null-ls.nvim",
+    cmd = { "NullLsInstall", "NullLsUninstall" },
+    opts = {
+      automatic_setup = true,
+      ensure_installed = {
+        "stylua",
+        "dprint",
+        "prettierd",
+        "eslint_d"
+      },
+    },
+  },
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { "WhoIsSethDaniel/lualine-lsp-progress.nvim" },
+    config = function()
+      local lualine = require('lualine')
+
+      local theme = require 'lualine.themes.modus-vivendi'
+      theme.normal.c.bg = '#272822'
+      theme.insert.c.bg = '#272822'
+      theme.visual.c.bg = '#272822'
+      theme.replace.c.bg = '#272822'
+      theme.command.c.bg = '#272822'
+      theme.inactive.c.bg = '#272822'
+
+      local lsp_servers = require('lualine.component'):extend()
+
+      function lsp_servers:init(options)
+        options.icon = options.icon or "󰌘"
+        options.separator = options.separator or " "
+        options.color = { fg = '#ffaa88', gui = 'italic,bold' }
+        options.padding = 0
+        lsp_servers.super.init(self, options)
+      end
+
+      function lsp_servers:update_status()
+        local buf_clients = vim.lsp.get_active_clients()
+        local null_ls_installed, null_ls = pcall(require, "null-ls")
+        local buf_client_names = {}
+        for _, client in pairs(buf_clients) do
+          if client.name == "null-ls" then
+            if null_ls_installed then
+              for _, source in ipairs(null_ls.get_source({ filetype = vim.bo.filetype })) do
+                table.insert(buf_client_names, source.name)
+              end
+            end
+          else
+            table.insert(buf_client_names, client.name)
+          end
+        end
+        return table.concat(buf_client_names, self.options.separator)
+      end
+
+      lualine.setup {
+        options = {
+          icons_enabled = false,
+          theme = theme,
+          component_separators = '',
+          section_separators = '',
+        },
+        sections = {
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff' },
+          lualine_c = {
+            {
+              'filename',
+              file_status = true,
+              newfile_status = false,
+              path = 1,
+              -- Shortens path to leave 40 spaces in the window
+              shorting_target = 40,
+              symbols = {
+                modified = '(modified)',
+                readonly = '(readonly)',
+                unnamed = '[No Name]',
+                newfile = '[New]'
+              }
+            }
+          },
+          lualine_x = {
+            {
+              'diagnostics',
+              sections = { 'error', 'warn', 'info', 'hint' },
+
+              diagnostics_color = {
+                -- Same values as the general color option can be used here.
+                error = 'DiagnosticError',
+                warn  = 'DiagnosticWarn',
+                info  = 'DiagnosticInfo',
+                hint  = 'DiagnosticHint',
+              },
+              symbols = { error = 'Err ', warn = 'Warn ', info = 'Info ', hint = 'Hint ' },
+              colored = true,
+              update_in_insert = false,
+              always_visible = false
+            },
+            lsp_servers,
+            {
+              'filetype',
+              colored = true,
+              padding = { left = 0, right = 1 },
+              icon = { align = 'right' },
+            },
+          },
+          lualine_y = { 'progress' },
+          lualine_z = { 'location' }
+        },
+        inactive_sections = {
+          lualine_a = {},
+          lualine_b = {},
+          lualine_c = { 'filename' },
+          lualine_x = { 'location' },
+          lualine_y = {},
+          lualine_z = {}
+        },
+        winbar = {
+          -- lualine_a = {},
+          lualine_b = {
+            {
+              "navic",
+              color_correction = nil,
+              navic_opts = nil,
+              color = { bg = "#272822", fg = '#949494' }
+            }
+          },
+          -- lualine_c = {
+          -- },
+          --   lualine_x = {},
+          --   lualine_y = {},
+          --   lualine_z = {}
+        },
+        inactive_winbar = {
+          --   lualine_a = {},
+          --   lualine_b = {},
+          lualine_c = {
+            {
+              'filename',
+              color = { fg = '#8c8c89', gui = 'italic,bold' },
+              file_status = true,
+              newfile_status = false,
+              path = 1,
+              shorting_target = 40,
+              symbols = {
+                modified = '(modified)',
+                readonly = '(readonly)',
+                unnamed = '[No Name]',
+                newfile = '[New]'
+              }
+            } },
+          --   lualine_x = {},
+          --   lualine_y = {},
+          --   lualine_z = {}
+        },
       }
     end
   },
   {
-    'williamboman/mason.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'lukas-reineke/lsp-format.nvim'
+    "SmiteshP/nvim-navic",
+    dependencies = "neovim/nvim-lspconfig",
+    opts = {}
   },
+
+  -- null-ls.nvim
+  -- WARNING: null-ls.nvim will be archived on August 11, 2023
+  -- Find a suitable replacement soon
+  -- Related: https://github.com/jose-elias-alvarez/null-ls.nvim/issues/1621
   {
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      'williamboman/mason.nvim',
-      'williamboman/mason-lspconfig.nvim',
-      'lukas-reineke/lsp-format.nvim',
-      { 'j-hui/fidget.nvim', tag = "legacy", opts = {} },
-    }
+    "jose-elias-alvarez/null-ls.nvim",
+    dependencies = "williamboman/mason.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = function()
+      local nls = require("null-ls")
+      local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
+      return {
+        sources = {
+          -- nls.builtins.formatting.stylua,
+          -- nls.builtins.formatting.dprint,
+          nls.builtins.formatting.prettierd,
+          -- nls.builtins.diagnostics.selene,
+          -- nls.builtins.formatting.markdownlint,
+          -- nls.builtins.formatting.clang_format,
+          -- nls.builtins.diagnostics.markdownlint,
+          -- nls.builtins.diagnostics.cpplint,
+        },
+        on_attach = function(client, bufnr)
+          -- print("attaching null_ls")
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            pattern = { "*" },
+            callback = function(_)
+              vim.lsp.buf.format()
+            end
+          })
+          -- -- Autoformat on save if supported
+          -- if client.supports_method("textDocument/formatting") then
+          --   vim.api.nvim_clear_autocmds({
+          --     group = augroup,
+          --     buffer = bufnr,
+          --   })
+          --   vim.api.nvim_create_autocmd("BufWritePre", {
+          --     group = augroup,
+          --     buffer = bufnr,
+          --     callback = function()
+          --       vim.lsp.buf.format({
+          --         bufnr = bufnr,
+          --         -- -- I don't really like the style of lua_ls's formatting, so I exclude it and instead use stylua
+          --         -- filter = function(client)
+          --         --   return client.name ~= "lua_ls"
+          --         -- end,
+          --       })
+          --     end,
+          --   })
+          -- end
+        end,
+      }
+    end,
   },
-  { "folke/neodev.nvim", opts = {} },
-  'sindrets/diffview.nvim',
-  'ntpeters/vim-better-whitespace',
-  'iberianpig/tig-explorer.vim',
-  'rbgrouleff/bclose.vim',
-  -- todo: seems to have a bug with entering insert mode?
-  -- {
-  --   "NeogitOrg/neogit",
-  --   dependencies = "nvim-lua/plenary.nvim",
-  --   config = function()
-  --     require("neogit").setup()
-  --   end
-  -- },
+
+  { "folke/neodev.nvim",        opts = {} },
+  "sindrets/diffview.nvim",
+  "ntpeters/vim-better-whitespace",
+  "iberianpig/tig-explorer.vim",
+  "rbgrouleff/bclose.vim",
   {
-    'tpope/vim-fugitive',
+    "tpope/vim-fugitive",
     config = function()
       map("n", "<space>gg", ":Git<cr>", { silent = true })
-      vim.cmd [[
+      vim.cmd([[
         au FileType gitcommit execute "normal! O" | startinsert
         nnoremap <silent> <space>gd :Gdiff<CR>
         nnoremap <silent> <space>gb :Git blame<CR>
@@ -313,8 +584,8 @@ require('lazy').setup({
           " autocmd FileType fugitive setlocal winheight=40 | nmap <buffer> <Tab> =
           autocmd FileType fugitive nmap <buffer> <Tab> =
         augroup END
-      ]]
-    end
+      ]])
+    end,
   },
   'tpope/vim-repeat',
   'tpope/vim-eunuch',
@@ -323,11 +594,11 @@ require('lazy').setup({
     'numToStr/Comment.nvim',
     opts = {}
   },
-  'mg979/vim-visual-multi',
+  "mg979/vim-visual-multi",
   {
-    'mbbill/undotree',
+    "mbbill/undotree",
     config = function()
-      vim.cmd [[
+      vim.cmd([[
         nmap U <C-r>
         nnoremap <c-\> :UndotreeToggle<cr>
         let g:undotree_WindowLayout = 4
@@ -340,20 +611,62 @@ require('lazy').setup({
         set undodir=~/.config/nvim/undo
         set undolevels=10000
         set undoreload=10000
-      ]]
-    end
+      ]])
+    end,
   },
+  {
+    "ggandor/leap.nvim",
+    dependencies = {
+      "tpope/vim-repeat",
+    },
+    config = function()
+      local leap = require("leap")
+      -- leap.add_repeat_mappings(';', ',', {
+      --   -- False by default. If set to true, the keys will work like the
+      --   -- native semicolon/comma, i.e., forward/backward is understood in
+      --   -- relation to the last motion.
+      --   relative_directions = true,
+      --   -- By default, all modes are included.
+      --   modes = { 'n', 'x', 'o' },
+      -- })
+
+      vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap-forward-to)')
+      vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward-to)')
+    end,
+  },
+  -- {
+  --   "kelly-lin/ranger.nvim",
+  --   config = function()
+  --     require("ranger-nvim").setup({
+  --       replace_netrw = true,
+  --       enable_cmds = true,
+  --       ui = {
+  --         border = "rounded",
+  --         height = 0.8,
+  --         width = 0.8,
+  --         x = 0.5,
+  --         y = 0.5,
+  --       }
+  --     })
+  --     vim.api.nvim_set_keymap("n", "-", "", {
+  --         noremap = true,
+  --         callback = function()
+  --           require("ranger-nvim").open(true)
+  --         end,
+  --       })
+  --   end,
+  -- },
   {
     "folke/trouble.nvim",
     dependencies = "nvim-tree/nvim-web-devicons",
     config = function()
       require("trouble").setup()
-    end
+    end,
   },
   {
-    'nyngwang/murmur.lua',
+    "nyngwang/murmur.lua",
     config = function()
-      require('murmur').setup {
+      require("murmur").setup({
         max_len = 80,
         disable_on_lines = 1000,
         exclude_filetypes = {},
@@ -361,76 +674,99 @@ require('lazy').setup({
           -- to trigger the close_events of vim.diagnostic.open_float.
           function()
             -- Close floating diag. and make it triggerable again.
-            vim.cmd('doautocmd InsertEnter')
+            vim.cmd("doautocmd InsertEnter")
             vim.w.diag_shown = false
           end,
-        }
-      }
-      vim.api.nvim_create_autocmd('CursorHold', {
+        },
+      })
+      vim.api.nvim_create_autocmd("CursorHold", {
         group = FOO,
-        pattern = '*',
+        pattern = "*",
         callback = function()
           -- skip when a float-win already exists.
-          if vim.w.diag_shown then return end
+          if vim.w.diag_shown then
+            return
+          end
 
           -- open float-win when hovering on a cursor-word.
-          if vim.w.cursor_word ~= '' then
+          if vim.w.cursor_word ~= "" then
             vim.diagnostic.open_float(nil, {
               focusable = true,
-              close_events = { 'InsertEnter' },
-              border = 'rounded',
-              source = 'always',
-              prefix = ' ',
-              scope = 'cursor',
+              close_events = { "InsertEnter" },
+              border = "rounded",
+              source = "always",
+              prefix = " ",
+              scope = "cursor",
             })
             vim.w.diag_shown = true
           end
-        end
+        end,
       })
-    end
+    end,
   },
   {
-    'lewis6991/gitsigns.nvim', dependencies = { 'nvim-lua/plenary.nvim' },
+    "lewis6991/gitsigns.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      require('gitsigns').setup {
-        signs                        = {
-          add          = { hl = 'GitSignsAdd', text = '│', numhl = 'GitSignsAddNr', linehl = 'GitSignsAddLn' },
-          change       = { hl = 'GitSignsChange', text = '│', numhl = 'GitSignsChangeNr', linehl = 'GitSignsChangeLn' },
-          delete       = { hl = 'GitSignsDelete', text = '_', numhl = 'GitSignsDeleteNr', linehl = 'GitSignsDeleteLn' },
-          topdelete    = { hl = 'GitSignsDelete', text = '‾', numhl = 'GitSignsDeleteNr', linehl = 'GitSignsDeleteLn' },
-          changedelete = { hl = 'GitSignsChange', text = '~', numhl = 'GitSignsChangeNr', linehl = 'GitSignsChangeLn' },
-          untracked    = { hl = 'GitSignsAdd', text = '┆', numhl = 'GitSignsAddNr', linehl = 'GitSignsAddLn' },
+      require("gitsigns").setup({
+        signs = {
+          add = { hl = "GitSignsAdd", text = "│", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn" },
+          change = {
+            hl = "GitSignsChange",
+            text = "│",
+            numhl = "GitSignsChangeNr",
+            linehl = "GitSignsChangeLn",
+          },
+          delete = {
+            hl = "GitSignsDelete",
+            text = "_",
+            numhl = "GitSignsDeleteNr",
+            linehl = "GitSignsDeleteLn",
+          },
+          topdelete = {
+            hl = "GitSignsDelete",
+            text = "‾",
+            numhl = "GitSignsDeleteNr",
+            linehl = "GitSignsDeleteLn",
+          },
+          changedelete = {
+            hl = "GitSignsChange",
+            text = "~",
+            numhl = "GitSignsChangeNr",
+            linehl = "GitSignsChangeLn",
+          },
+          untracked = { hl = "GitSignsAdd", text = "┆", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn" },
         },
-        signcolumn                   = true,  -- Toggle with `:Gitsigns toggle_signs`
-        numhl                        = false, -- Toggle with `:Gitsigns toggle_numhl`
-        linehl                       = false, -- Toggle with `:Gitsigns toggle_linehl`
-        word_diff                    = false, -- Toggle with `:Gitsigns toggle_word_diff`
-        watch_gitdir                 = {
+        signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`
+        numhl = false,     -- Toggle with `:Gitsigns toggle_numhl`
+        linehl = false,    -- Toggle with `:Gitsigns toggle_linehl`
+        word_diff = false, -- Toggle with `:Gitsigns toggle_word_diff`
+        watch_gitdir = {
           interval = 1000,
-          follow_files = true
+          follow_files = true,
         },
-        attach_to_untracked          = true,
-        current_line_blame           = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
-        current_line_blame_opts      = {
+        attach_to_untracked = true,
+        current_line_blame = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
+        current_line_blame_opts = {
           virt_text = true,
-          virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
+          virt_text_pos = "eol", -- 'eol' | 'overlay' | 'right_align'
           delay = 1000,
           ignore_whitespace = false,
         },
-        current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
-        sign_priority                = 6,
-        update_debounce              = 100,
-        status_formatter             = nil,   -- Use default
-        max_file_length              = 40000, -- Disable if file is longer than this (in lines)
-        preview_config               = {
+        current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> - <summary>",
+        sign_priority = 6,
+        update_debounce = 100,
+        status_formatter = nil,  -- Use default
+        max_file_length = 40000, -- Disable if file is longer than this (in lines)
+        preview_config = {
           -- Options passed to nvim_open_win
-          border = 'single',
-          style = 'minimal',
-          relative = 'cursor',
+          border = "single",
+          style = "minimal",
+          relative = "cursor",
           row = 0,
-          col = 1
+          col = 1,
         },
-      }
+      })
     end
   },
   {
@@ -438,6 +774,21 @@ require('lazy').setup({
     dependencies = {
       'kana/vim-textobj-user',
     },
+  },
+  { 'RRethy/nvim-treesitter-endwise' },
+  {
+    'windwp/nvim-ts-autotag',
+    opts = {
+      filetypes = {
+        'html', 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue', 'tsx', 'jsx',
+        'rescript',
+        'xml',
+        'php',
+        'markdown',
+        'astro', 'glimmer', 'handlebars', 'hbs',
+        'elixir', 'eelixir', 'heex'
+      }
+    }
   },
   {
     'nvim-treesitter/nvim-treesitter',
@@ -447,73 +798,83 @@ require('lazy').setup({
     config = function()
       pcall(require('nvim-treesitter.install').update { with_sync = true })
       require('nvim-treesitter.configs').setup {
-          ensure_installed = {
-            'c',
-            'cpp',
-            'elixir',
-            'go',
-            'rust',
-            'tsx',
-            'typescript',
-            'help',
-            'diff',
-            'vim',
-            'regex',
-            'lua',
-            'bash',
-            'markdown',
-            'markdown_inline'
-          },
-          auto_install = true,
-          highlight = { enable = false },
-          -- textobjects = {
-          --   select = {
-          --     enable = true,
-          --     lookahead = true,
-          --     keymaps = {
-          --       ['af'] = '@function.outer',
-          --       ['if'] = '@function.inner',
-          --       ['ac'] = '@comment.outer',
-          --       ['ic'] = '@comment.inner',
-          --     }
-          --   }
-          -- }
-        }
+        ensure_installed = {
+          'c',
+          'cpp',
+          'elixir',
+          'eex',
+          'go',
+          'rust',
+          'tsx',
+          'typescript',
+          'help',
+          'diff',
+          'vim',
+          'regex',
+          'lua',
+          'bash',
+          'markdown',
+          'markdown_inline'
+        },
+        endwise = {
+          enable = true,
+        },
+        auto_install = true,
+        highlight = { enable = false },
+      }
     end,
   },
-  'AndrewRadev/tagalong.vim',
-  'nvim-tree/nvim-web-devicons',
-  'feline-nvim/feline.nvim',
   {
-    'rcarriga/nvim-notify',
+    "nvim-treesitter/nvim-treesitter",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter-textobjects",
+    },
     config = function()
-      require('notify').setup()
-    end
+      pcall(require("nvim-treesitter.install").update({ with_sync = true }))
+      require("nvim-treesitter.configs").setup({
+        ensure_installed = {
+          "c",
+          "cpp",
+          "elixir",
+          "go",
+          "rust",
+          "tsx",
+          "typescript",
+          -- 'help',
+          "diff",
+          "vim",
+          "regex",
+          "lua",
+          "bash",
+          "markdown",
+          "markdown_inline",
+        },
+        auto_install = true,
+        highlight = { enable = false },
+        indent = { enable = true },
+      })
+    end,
   },
+  "AndrewRadev/tagalong.vim",
+  "nvim-tree/nvim-web-devicons",
+  -- {
+  --   "rcarriga/nvim-notify",
+  --   config = function()
+  --     require("notify").setup()
+  --   end,
+  -- },
   {
-    'zbirenbaum/copilot.lua',
+    "zbirenbaum/copilot.lua",
     opts = {
       panel = {
-        enabled = true,
-        auto_refresh = false,
-        keymap = {
-          jump_prev = "[[",
-          jump_next = "]]",
-          accept = "<CR>",
-          refresh = "gr",
-          open = "<M-CR>"
-        },
-        layout = {
-          position = "right",
-          ratio = 0.4
-        },
+        enabled = false,
       },
       suggestion = {
         enabled = true,
         auto_trigger = true,
-        debounce = 75,
+        debounce = 50,
         keymap = {
-          accept = "<tab>",
+          -- accept = "<tab>",
           accept_word = false,
           accept_line = false,
           next = "<M-]>",
@@ -524,14 +885,14 @@ require('lazy').setup({
       filetypes = {
         ["."] = true,
       },
-      copilot_node_command = '/Users/andrew/.asdf/installs/nodejs/16.18.1/bin/node',
+      copilot_node_command = "/Users/marble/.asdf/shims/node",
       server_opts_overrides = {},
-    }
+    },
   },
   {
-    'akinsho/bufferline.nvim',
+    "akinsho/bufferline.nvim",
     config = function()
-      require("bufferline").setup {
+      require("bufferline").setup({
         options = {
           show_buffer_close_icons = false,
           show_close_icon = false,
@@ -544,14 +905,235 @@ require('lazy').setup({
         },
         highlights = {
           fill = {
-            bg = '#272822',
+            bg = "#272822",
           },
           buffer_selected = {
-            bg = '#272822'
-          }
-        }
+            bg = "#272822",
+          },
+        },
+      })
+    end,
+  },
+  {
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
+    opts = {} -- this is equalent to setup({}) function
+  },
+  {
+    'hrsh7th/nvim-cmp',
+    dependencies = {
+      'windwp/nvim-autopairs',
+      'FelipeLema/cmp-async-path',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-calc',
+      'hrsh7th/cmp-cmdline',
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-nvim-lua',
+      'hrsh7th/cmp-nvim-lsp-signature-help',
+      'saadparwaiz1/cmp_luasnip',
+      {
+        'rafamadriz/friendly-snippets',
+        config = function()
+          require('luasnip.loaders.from_vscode').lazy_load()
+        end,
+      },
+      {
+        'L3MON4D3/LuaSnip',
+        build = 'make install_jsregexp',
+        version = 'v2.*',
+        config = true,
+        keys = {
+          -- {
+          --   '<c-space>',
+          --   function()
+          --     return require('luasnip').jumpable(1) and '<Plug>luasnip-jump-next' or '<tab>'
+          --   end,
+          --   expr = true,
+          --   silent = true,
+          --   mode = 'i',
+          -- },
+          -- {
+          --   '<tab>',
+          --   function()
+          --     return require('luasnip').jump(1)
+          --   end,
+          --   mode = 's',
+          -- },
+          -- {
+          --   '<S-tab>',
+          --   function()
+          --     return require('luasnip').jump(-1)
+          --   end,
+          --   mode = { 'i', 's' },
+          -- },
+        },
+      },
+    },
+    event = 'InsertEnter',
+    opts = function()
+      vim.api.nvim_set_hl(0, 'CmpGhostText', { link = 'Comment', default = true })
+      local cmp = require('cmp')
+      local defaults = require('cmp.config.default')()
+
+      return {
+        completion = {
+          -- autocomplete = false,
+          completeopt = "menu,menuone,noinsert,noselect",
+          -- completeopt = "nomenu",
+          -- keyword_length = 3,
+        },
+        snippet = {
+          expand = function(args)
+            require('luasnip').lsp_expand(args.body)
+          end,
+        },
+        -- preselect = cmp.PreselectMode.Item,
+        preselect = cmp.PreselectMode.None,
+        view = {
+          entries = { name = "custom", selection_order = "near_cursor" },
+        },
+        mapping = cmp.mapping.preset.insert({
+          ['<C-j>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+          ['<C-k>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<C-e>'] = cmp.mapping.abort(),
+          -- ['<CR>'] = cmp.mapping.confirm({
+          --   behavior = cmp.confirm({ select = true }),
+          --   select = true
+          -- }),
+          -- ['<S-CR>'] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+        }),
+        performance = {
+          max_view_entries = 5
+        },
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'nvim_lua' },
+          { name = 'luasnip' },
+          { name = 'buffer' },
+          { name = 'async_path' },
+          { name = 'calc' },
+          { name = 'nvim_lsp_signature_help' },
+        }),
+        formatting = {
+          format = function(_, item)
+            local icons = {
+              Array = ' ',
+              Boolean = ' ',
+              Class = ' ',
+              Color = ' ',
+              Constant = ' ',
+              Constructor = ' ',
+              Copilot = ' ',
+              Enum = ' ',
+              EnumMember = ' ',
+              Event = ' ',
+              Field = ' ',
+              File = ' ',
+              Folder = ' ',
+              Function = ' ',
+              Interface = ' ',
+              Key = ' ',
+              Keyword = ' ',
+              Method = ' ',
+              Module = ' ',
+              Namespace = ' ',
+              Null = ' ',
+              Number = ' ',
+              Object = ' ',
+              Operator = ' ',
+              Package = ' ',
+              Property = ' ',
+              Reference = ' ',
+              Snippet = ' ',
+              String = ' ',
+              Struct = ' ',
+              Text = ' ',
+              TypeParameter = ' ',
+              Unit = ' ',
+              Value = ' ',
+              Variable = ' ',
+            }
+            if icons[item.kind] then
+              item.kind = icons[item.kind] .. item.kind
+            end
+            return item
+          end,
+        },
+        experimental = {
+          -- ghost_text = { hl_group = 'CmpGhostText' }
+          -- native_menu = false,
+          ghost_text = false,
+        },
+        sorting = defaults.sorting,
+        window = { completion = cmp.config.window.bordered(), documentation = cmp.config.window.bordered() },
       }
-    end
+    end,
+    config = function(_, opts)
+      local cmp = require('cmp')
+      local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+      cmp.setup(opts)
+      ---@diagnostic disable-next-line: missing-fields
+      cmp.setup.cmdline('/', {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = { { name = 'buffer' } },
+      })
+      ---@diagnostic disable-next-line: missing-fields
+      cmp.setup.cmdline(':', {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = cmp.config.sources({ { name = 'path' }, { name = 'cmdline' } }),
+      })
+      -- nvim-autopairs integration
+      cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
+
+      -- gray
+      vim.api.nvim_set_hl(0, 'CmpItemAbbrDeprecated', { bg = 'NONE', strikethrough = true, fg = '#808080' })
+      -- blue
+      vim.api.nvim_set_hl(0, 'CmpItemAbbrMatch', { bg = 'NONE', fg = '#569CD6' })
+      vim.api.nvim_set_hl(0, 'CmpItemAbbrMatchFuzzy', { link = 'CmpIntemAbbrMatch' })
+      -- light blue
+      vim.api.nvim_set_hl(0, 'CmpItemKindVariable', { bg = 'NONE', fg = '#9CDCFE' })
+      vim.api.nvim_set_hl(0, 'CmpItemKindInterface', { link = 'CmpItemKindVariable' })
+      vim.api.nvim_set_hl(0, 'CmpItemKindText', { link = 'CmpItemKindVariable' })
+      -- pink
+      vim.api.nvim_set_hl(0, 'CmpItemKindFunction', { bg = 'NONE', fg = '#C586C0' })
+      vim.api.nvim_set_hl(0, 'CmpItemKindMethod', { link = 'CmpItemKindFunction' })
+      -- front
+      vim.api.nvim_set_hl(0, 'CmpItemKindKeyword', { bg = 'NONE', fg = '#D4D4D4' })
+      vim.api.nvim_set_hl(0, 'CmpItemKindProperty', { link = 'CmpItemKindKeyword' })
+      vim.api.nvim_set_hl(0, 'CmpItemKindUnit', { link = 'CmpItemKindKeyword' })
+
+      --- If copilot suggestion is visible and cmp has no selected entry,
+      --- <CR> will accept suggestion, otherwise if there is no
+      --- copilot suggestion and cmp is visible, <CR> will select
+      --- the first cmp entry, otherwise <CR> will just do
+      --- its default behavior.
+      function set_confirm_keymap()
+        vim.keymap.set("i", "<TAB>", function()
+          local suggestion = require("copilot.suggestion")
+          -- local cmp = require("cmp")
+          if
+              cmp
+              and (
+                cmp.visible() and cmp.get_selected_entry() ~= nil
+                or cmp.visible() and (not suggestion or not suggestion.is_visible())
+              )
+          then
+            vim.defer_fn(function() cmp.confirm({ select = true }) end, 5)
+            return true
+          end
+          if suggestion and suggestion.is_visible() then
+            vim.defer_fn(function() suggestion.accept() end, 5)
+            return true
+          end
+          return "<TAB>"
+        end, { expr = true, remap = true })
+      end
+
+      set_confirm_keymap()
+    end,
   },
 })
 
@@ -567,50 +1149,105 @@ vim.api.nvim_exec(
 )
 
 -- Gitsigns
-require('gitsigns').setup {
+require("gitsigns").setup({
   signs = {
-    add = { hl = 'GitGutterAdd', text = '+' },
-    change = { hl = 'GitGutterChange', text = '~' },
-    delete = { hl = 'GitGutterDelete', text = '_' },
-    topdelete = { hl = 'GitGutterDelete', text = '‾' },
-    changedelete = { hl = 'GitGutterChange', text = '~' },
+    add = { hl = "GitGutterAdd", text = "+" },
+    change = { hl = "GitGutterChange", text = "~" },
+    delete = { hl = "GitGutterDelete", text = "_" },
+    topdelete = { hl = "GitGutterDelete", text = "‾" },
+    changedelete = { hl = "GitGutterChange", text = "~" },
   },
-}
+})
 
-function reload()
-  for name, _ in pairs(package.loaded) do
-    if name:match('^cnull') then
-      package.loaded[name] = nil
-    end
-  end
-
-  dofile(vim.env.MYVIMRC)
-
-  vim.notify("Configuration reloaded!", vim.log.levels.INFO)
-
-  vim.api.nvim_command('PackerSync')
-end
-
-vim.cmd [[command! Reload lua reload()]]
-
-vim.cmd [[
+vim.cmd([[
 autocmd! TermOpen *FZF file term://fzf
 autocmd! FileType fzf set laststatus=0 noshowmode noruler cmdheight=1
       \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler cmdheight=1 number signcolumn=yes
-]]
+]])
 
-vim.cmd [[colorscheme monokai]]
+vim.cmd([[colorscheme monokai]])
 
 -- Reset scrolloff to 999 everytime a buffer is opened
 -- Might be able to remove at some point, not sure what was overriding it
-vim.cmd [[autocmd BufEnter * setlocal scrolloff=999]]
+vim.cmd([[autocmd BufEnter * setlocal scrolloff=999]])
 
-require('modules.files')
-require('modules.buffers')
-require('modules.clipboard')
-require('modules.statusline')
-require('modules.lsp')
-require('modules.git_lens')
-require('modules.terminals')
-require('modules.fzf')
--- require('modules.autocomplete')
+-- vim.keymap.set('t', '<esc>', '<C-\\><C-n>')
+-- vim.keymap.set('t', '<c-q>>', '<esc>')
+-- vim.keymap.set('t', '<c-h>', '<C-\\><C-n>:BufferLineMovePrev<CR>', { silent = true })
+-- vim.keymap.set('t', '<c-l>', '<C-\\><C-n>:BufferLineMoveNext<CR>', { silent = true })
+
+-- moving around buffers and stuff
+vim.cmd [[
+function! ToggleWindowHorizontalVerticalSplit()
+  if !exists('t:splitType')
+    let t:splitType = 'vertical'
+  endif
+
+if t:splitType == 'vertical' " is vertical switch to horizontal
+  windo wincmd K
+  let t:splitType = 'horizontal'
+
+  else " is horizontal switch to vertical
+  windo wincmd H
+  let t:splitType = 'vertical'
+  endif
+  endfunction
+
+  com! Rotate :call ToggleWindowHorizontalVerticalSplit()<cr>
+
+  nnoremap <silent> <c-x><c-k> :BufDel!<CR>
+  nnoremap <silent> <leader><q> :BufDel!<CR>
+  nmap <silent> <c-h> :BufferLineCyclePrev<CR>
+  nmap <silent> <c-l> :BufferLineCycleNext<CR>
+  nmap <silent> <c-x><c-s> :w<CR>
+  nmap <silent> <c-x><c-b> :FzfLua buffers<CR>
+
+  function! CloseAllOtherBuffers()
+    let curr = bufnr("%")
+    let last = bufnr("$")
+
+    if curr > 1    | silent! execute "1,".(curr-1)."bd"     | endif
+    if curr < last | silent! execute (curr+1).",".last."bd" | endif
+  endfunction
+
+  com! BufOnly execute 'call CloseAllOtherBuffers()'
+  nmap <silent> <space>bo :BufOnly<CR>
+]]
+
+-- files
+vim.cmd [[
+  source ~/.config/nvim/ranger.vim
+  nmap <silent> - :Ranger<cr>
+]]
+
+-- clipboard
+vim.cmd [[
+  set clipboard=unnamedplus
+  let g:yoinkSyncNumberedRegisters = 1
+  let g:yoinkIncludeDeleteOperations = 1
+  let g:yoinkAutoFormatPaste = 1
+  nmap p <plug>(YoinkPaste_p)
+  nmap P <plug>(YoinkPaste_P)
+  nmap <c-p> <plug>(YoinkPostPasteSwapBack)
+  nmap <c-n> <plug>(YoinkPostPasteSwapForward)
+  nmap y <plug>(YoinkYankPreserveCursorPosition)
+  xmap y <plug>(YoinkYankPreserveCursorPosition)
+  nmap Y y$
+]]
+
+local function safe_require(module)
+  local success, loaded_module = pcall(require, module)
+  if success then
+    return loaded_module
+  end
+  vim.cmd.echo('Error loading ' .. module)
+end
+
+safe_require("modules.statusline")
+safe_require("modules.git_lens")
+require("modules.lsp")
+safe_require("modules.fzf")
+safe_require("modules.terminals")
+
+vim.api.nvim_set_hl(0, "DiffText", { bg = "#6068da" })
+vim.api.nvim_set_hl(0, "WinSeparator", { bg = "#272822", fg = '#949494' })
