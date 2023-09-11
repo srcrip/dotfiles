@@ -96,6 +96,10 @@ require('lazy').setup({
   { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' },
   {
     "kevinhwang91/nvim-bqf",
+    config = function()
+      map("n", "]q", ":cn<cr>", { silent = true })
+      map("n", "[q", ":cp<cr>", { silent = true })
+    end
   },
   {
     "aaronhallaert/advanced-git-search.nvim",
