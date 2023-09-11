@@ -14,8 +14,9 @@ vim.o.smartcase = true
 vim.o.signcolumn = 'yes'
 
 vim.o.termguicolors = true
-vim.o.timeoutlen = 550
-vim.o.ttimeoutlen = 0
+vim.o.timeout = 500
+vim.o.timeoutlen = 500
+vim.o.ttimeoutlen = 50
 vim.o.updatetime = 250
 
 -- No tabs allowed

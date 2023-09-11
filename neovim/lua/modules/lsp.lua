@@ -2,9 +2,34 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = "Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = "Go to next diagnostic message" })
 vim.keymap.set('n', '<leader>t', "trouble", { desc = "Open diagnostics list" })
 
+vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
+  vim.lsp.handlers.hover,
+  { border = 'rounded' }
+)
+
+vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
+  vim.lsp.handlers.signature_help,
+  { border = 'rounded' }
+)
+
+vim.diagnostic.config({
+  float = {
+    border = 'rounded',
+    source = "if_many"
+  }
+})
+
+vim.keymap.set('i', '<c-s>', function() vim.lsp.buf.signature_help() end, { buffer = true })
+vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
+  vim.lsp.handlers['signature_help'], {
+    border = 'single',
+    close_events = { "CursorMoved", "BufHidden", "InsertCharPre" },
+  }
+)
+
 local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
 local on_attach = function(client, bufnr)
-  -- print("attaching " .. client.name .. " to buffer " .. bufnr)
+  vim.notify("attaching " .. client.name .. " to buffer " .. bufnr)
 
   local map = function(mode, keys, func, opts)
     local options = { noremap = true }
@@ -20,20 +45,11 @@ local on_attach = function(client, bufnr)
   map('n', 'ga', vim.lsp.buf.code_action)
 
   map('n', 'gd', vim.lsp.buf.definition)
+  map('n', 'gD', vim.lsp.buf.type_definition)
   map('n', 'gr', require('telescope.builtin').lsp_references)
   map('n', 'gI', vim.lsp.buf.implementation)
-  map('n', '<leader>D', vim.lsp.buf.type_definition)
-  map('n', '<leader>ds', require('telescope.builtin').lsp_document_symbols)
-  map('n', '<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols)
-
-  -- See `:help K` for why this keymap
+  map({ 'n', 'i' }, '<C-s>', vim.lsp.buf.signature_help)
   map('n', '<leader>k', vim.lsp.buf.hover)
-  map('n', '<C-k>', vim.lsp.buf.signature_help)
-
-  -- Lesser used LSP functionality
-  map('n', 'gD', vim.lsp.buf.declaration)
-  map('n', '<leader>wa', vim.lsp.buf.add_workspace_folder)
-  map('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder)
 
   vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
   vim.api.nvim_buf_create_user_command(0, 'Format',
@@ -60,18 +76,9 @@ local on_attach = function(client, bufnr)
   end
 end
 
---  Add any additional override configuration in the following tables. They will be passed to
---  the `settings` field of the server config. You must look up that documentation yourself.
---
---  If you want to override the default filetypes that your language server will attach to you can
---  define the property 'filetypes' to the map in question.
 local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  -- pyright = {},
-  -- rust_analyzer = {},
-  -- tsserver = {},
-  -- html = { filetypes = { 'html', 'twig', 'hbs'} },
+  rust_analyzer = {},
+  html = { filetypes = { 'html' } },
   tailwindcss = {},
   cssls = {},
   svelte = {},
@@ -134,8 +141,6 @@ mason_lspconfig.setup_handlers {
   function(server_name)
     require('lspconfig')[server_name].setup {
       capabilities = capabilities,
-
-
       on_attach = function(client, bufnr)
         xpcall(function()
           on_attach(client, bufnr)
@@ -143,11 +148,6 @@ mason_lspconfig.setup_handlers {
           print(debug.traceback(err))
         end)
       end,
-
-      -- on_attach = on_attach,
-      -- on_attach = function(client, bufnr)
-      --   xpcall(on_attach(client, bufnr), handle_error)
-      -- end,
       settings = servers[server_name],
       filetypes = (servers[server_name] or {}).filetypes,
     }

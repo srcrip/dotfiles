@@ -30,12 +30,6 @@ end
 
 vim.opt.fillchars:append({ diff = "╱" })
 
--- map('n', '<leader>r', vim.diagnostic.reset)
-vim.keymap.set("n", "<space>r", vim.diagnostic.reset)
-
-FOO = "your_augroup_name"
-vim.api.nvim_create_augroup(FOO, { clear = true })
-
 require("lazy").setup({
   "sheerun/vim-polyglot",
   "svermeulen/vim-yoink",
@@ -48,7 +42,7 @@ require("lazy").setup({
     end,
   },
   "crusoexia/vim-monokai",
-  -- "machakann/vim-sandwich",
+  "machakann/vim-sandwich",
   {
     "windwp/nvim-spectre",
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -154,8 +148,6 @@ require("lazy").setup({
     tag = "0.1.1",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      -- You dont need to set any of these options. These are the default ones. Only
-      -- the loading is important
       require("telescope").setup({
         extensions = {
           fzf = {
@@ -167,9 +159,6 @@ require("lazy").setup({
           },
         },
       })
-      -- To get fzf loaded and working with telescope, you need to call
-      -- load_extension, somewhere after setup function:
-      -- require('telescope').load_extension('fzf')
     end,
   },
   {
@@ -186,7 +175,6 @@ require("lazy").setup({
     end,
     dependencies = {
       "nvim-telescope/telescope.nvim",
-      -- to show diff splits and open commits in browser
       "tpope/vim-fugitive",
     },
   },
@@ -231,7 +219,6 @@ require("lazy").setup({
           return join(lines, "\n")
         endfunction
       ]])
-      -- map("v", "<space>/", ":FzfLua grep_project <C-R>=GetVisualSelection()<CR><CR>", { silent = true })
       map("v", "<space>/", ":lua require('fzf-lua').grep_visual()<cr>", { silent = true })
       map("n", "<space>/", ":FzfLua grep_project<cr>", { silent = true })
       map("n", "<space><space>", ":FzfLua grep_project<cr>", { silent = true })
@@ -241,16 +228,6 @@ require("lazy").setup({
       map("n", "<space><cr>", ":FzfLua resume<cr>", { silent = true })
     end,
   },
-  -- {
-  --   "junegunn/vim-easy-align",
-  --   config = function()
-  --     -- vim.cmd[[
-  --     --   vmap ga <Plug>(EasyAlign)
-  --     --   xmap ga <Plug>(EasyAlign)
-  --     --   nmap ga <Plug>(EasyAlign)
-  --     -- ]]
-  --   end,
-  -- },
   {
     "svermeulen/vim-subversive",
     config = function()
@@ -508,8 +485,6 @@ require("lazy").setup({
     dependencies = "neovim/nvim-lspconfig",
     opts = {}
   },
-
-  -- null-ls.nvim
   -- WARNING: null-ls.nvim will be archived on August 11, 2023
   -- Find a suitable replacement soon
   -- Related: https://github.com/jose-elias-alvarez/null-ls.nvim/issues/1621
@@ -522,43 +497,17 @@ require("lazy").setup({
       local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
       return {
         sources = {
-          -- nls.builtins.formatting.stylua,
           -- nls.builtins.formatting.dprint,
           nls.builtins.formatting.prettierd,
-          -- nls.builtins.diagnostics.selene,
-          -- nls.builtins.formatting.markdownlint,
-          -- nls.builtins.formatting.clang_format,
-          -- nls.builtins.diagnostics.markdownlint,
-          -- nls.builtins.diagnostics.cpplint,
         },
         on_attach = function(client, bufnr)
-          -- print("attaching null_ls")
+          vim.notify("attaching null_ls")
           vim.api.nvim_create_autocmd("BufWritePre", {
             pattern = { "*" },
             callback = function(_)
               vim.lsp.buf.format()
             end
           })
-          -- -- Autoformat on save if supported
-          -- if client.supports_method("textDocument/formatting") then
-          --   vim.api.nvim_clear_autocmds({
-          --     group = augroup,
-          --     buffer = bufnr,
-          --   })
-          --   vim.api.nvim_create_autocmd("BufWritePre", {
-          --     group = augroup,
-          --     buffer = bufnr,
-          --     callback = function()
-          --       vim.lsp.buf.format({
-          --         bufnr = bufnr,
-          --         -- -- I don't really like the style of lua_ls's formatting, so I exclude it and instead use stylua
-          --         -- filter = function(client)
-          --         --   return client.name ~= "lua_ls"
-          --         -- end,
-          --       })
-          --     end,
-          --   })
-          -- end
         end,
       }
     end,
@@ -593,7 +542,6 @@ require("lazy").setup({
   },
   'tpope/vim-repeat',
   'tpope/vim-eunuch',
-  -- 'tpope/vim-commentary',
   {
     'numToStr/Comment.nvim',
     opts = {}
@@ -616,26 +564,6 @@ require("lazy").setup({
         set undolevels=10000
         set undoreload=10000
       ]])
-    end,
-  },
-  {
-    "ggandor/leap.nvim",
-    dependencies = {
-      "tpope/vim-repeat",
-    },
-    config = function()
-      local leap = require("leap")
-      -- leap.add_repeat_mappings(';', ',', {
-      --   -- False by default. If set to true, the keys will work like the
-      --   -- native semicolon/comma, i.e., forward/backward is understood in
-      --   -- relation to the last motion.
-      --   relative_directions = true,
-      --   -- By default, all modes are included.
-      --   modes = { 'n', 'x', 'o' },
-      -- })
-
-      vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap-forward-to)')
-      vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward-to)')
     end,
   },
   -- {
@@ -668,45 +596,11 @@ require("lazy").setup({
     end,
   },
   {
-    "nyngwang/murmur.lua",
+    'echasnovski/mini.nvim',
+    version = false,
     config = function()
-      require("murmur").setup({
-        max_len = 80,
-        disable_on_lines = 1000,
-        exclude_filetypes = {},
-        callbacks = {
-          -- to trigger the close_events of vim.diagnostic.open_float.
-          function()
-            -- Close floating diag. and make it triggerable again.
-            vim.cmd("doautocmd InsertEnter")
-            vim.w.diag_shown = false
-          end,
-        },
-      })
-      vim.api.nvim_create_autocmd("CursorHold", {
-        group = FOO,
-        pattern = "*",
-        callback = function()
-          -- skip when a float-win already exists.
-          if vim.w.diag_shown then
-            return
-          end
-
-          -- open float-win when hovering on a cursor-word.
-          if vim.w.cursor_word ~= "" then
-            vim.diagnostic.open_float(nil, {
-              focusable = true,
-              close_events = { "InsertEnter" },
-              border = "rounded",
-              source = "always",
-              prefix = " ",
-              scope = "cursor",
-            })
-            vim.w.diag_shown = true
-          end
-        end,
-      })
-    end,
+      require('mini.cursorword').setup({ delay = 50 })
+    end
   },
   {
     "lewis6991/gitsigns.nvim",
@@ -861,12 +755,6 @@ require("lazy").setup({
   },
   "AndrewRadev/tagalong.vim",
   "nvim-tree/nvim-web-devicons",
-  -- {
-  --   "rcarriga/nvim-notify",
-  --   config = function()
-  --     require("notify").setup()
-  --   end,
-  -- },
   {
     "zbirenbaum/copilot.lua",
     opts = {
@@ -878,12 +766,12 @@ require("lazy").setup({
         auto_trigger = true,
         debounce = 50,
         keymap = {
-          -- accept = "<tab>",
+          accept = false,
           accept_word = false,
           accept_line = false,
-          next = "<M-]>",
-          prev = "<M-[>",
-          dismiss = "<C-]>",
+          next = false,
+          prev = false,
+          dismiss = false
         },
       },
       filetypes = {
@@ -921,7 +809,7 @@ require("lazy").setup({
   {
     'windwp/nvim-autopairs',
     event = "InsertEnter",
-    opts = {} -- this is equalent to setup({}) function
+    opts = {}
   },
   {
     'hrsh7th/nvim-cmp',
@@ -981,10 +869,7 @@ require("lazy").setup({
 
       return {
         completion = {
-          -- autocomplete = false,
           completeopt = "menu,menuone,noinsert,noselect",
-          -- completeopt = "nomenu",
-          -- keyword_length = 3,
         },
         snippet = {
           expand = function(args)
@@ -1001,13 +886,7 @@ require("lazy").setup({
           ['<C-k>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
           ['<C-f>'] = cmp.mapping.scroll_docs(4),
-          ['<C-Space>'] = cmp.mapping.complete(),
           ['<C-e>'] = cmp.mapping.abort(),
-          -- ['<CR>'] = cmp.mapping.confirm({
-          --   behavior = cmp.confirm({ select = true }),
-          --   select = true
-          -- }),
-          -- ['<S-CR>'] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
         }),
         performance = {
           max_view_entries = 5
@@ -1016,56 +895,55 @@ require("lazy").setup({
           { name = 'nvim_lsp' },
           { name = 'nvim_lua' },
           { name = 'luasnip' },
-          { name = 'buffer' },
+          -- { name = 'buffer' },
           { name = 'async_path' },
-          { name = 'calc' },
           { name = 'nvim_lsp_signature_help' },
         }),
-        formatting = {
-          format = function(_, item)
-            local icons = {
-              Array = ' ',
-              Boolean = ' ',
-              Class = ' ',
-              Color = ' ',
-              Constant = ' ',
-              Constructor = ' ',
-              Copilot = ' ',
-              Enum = ' ',
-              EnumMember = ' ',
-              Event = ' ',
-              Field = ' ',
-              File = ' ',
-              Folder = ' ',
-              Function = ' ',
-              Interface = ' ',
-              Key = ' ',
-              Keyword = ' ',
-              Method = ' ',
-              Module = ' ',
-              Namespace = ' ',
-              Null = ' ',
-              Number = ' ',
-              Object = ' ',
-              Operator = ' ',
-              Package = ' ',
-              Property = ' ',
-              Reference = ' ',
-              Snippet = ' ',
-              String = ' ',
-              Struct = ' ',
-              Text = ' ',
-              TypeParameter = ' ',
-              Unit = ' ',
-              Value = ' ',
-              Variable = ' ',
-            }
-            if icons[item.kind] then
-              item.kind = icons[item.kind] .. item.kind
-            end
-            return item
-          end,
-        },
+        -- formatting = {
+        --   format = function(_, item)
+        --     local icons = {
+        --       Array = ' ',
+        --       Boolean = ' ',
+        --       Class = ' ',
+        --       Color = ' ',
+        --       Constant = ' ',
+        --       Constructor = ' ',
+        --       Copilot = ' ',
+        --       Enum = ' ',
+        --       EnumMember = ' ',
+        --       Event = ' ',
+        --       Field = ' ',
+        --       File = ' ',
+        --       Folder = ' ',
+        --       Function = ' ',
+        --       Interface = ' ',
+        --       Key = ' ',
+        --       Keyword = ' ',
+        --       Method = ' ',
+        --       Module = ' ',
+        --       Namespace = ' ',
+        --       Null = ' ',
+        --       Number = ' ',
+        --       Object = ' ',
+        --       Operator = ' ',
+        --       Package = ' ',
+        --       Property = ' ',
+        --       Reference = ' ',
+        --       Snippet = ' ',
+        --       String = ' ',
+        --       Struct = ' ',
+        --       Text = ' ',
+        --       TypeParameter = ' ',
+        --       Unit = ' ',
+        --       Value = ' ',
+        --       Variable = ' ',
+        --     }
+        --     if icons[item.kind] then
+        --       item.kind = icons[item.kind] .. item.kind
+        --     end
+        --     return item
+        --   end,
+        -- },
         experimental = {
           -- ghost_text = { hl_group = 'CmpGhostText' }
           -- native_menu = false,
@@ -1114,31 +992,26 @@ require("lazy").setup({
       --- copilot suggestion and cmp is visible, <CR> will select
       --- the first cmp entry, otherwise <CR> will just do
       --- its default behavior.
-      function set_confirm_keymap()
-        vim.keymap.set("i", "<TAB>", function()
-          local suggestion = require("copilot.suggestion")
-          -- local cmp = require("cmp")
-          if
-              cmp
-              and (
-                cmp.visible() and cmp.get_selected_entry() ~= nil
-                or cmp.visible() and (not suggestion or not suggestion.is_visible())
-              )
-          then
-            vim.defer_fn(function() cmp.confirm({ select = true }) end, 5)
-            return true
-          end
-          if suggestion and suggestion.is_visible() then
-            vim.defer_fn(function() suggestion.accept() end, 5)
-            return true
-          end
-          return "<TAB>"
-        end, { expr = true, remap = true })
-      end
-
-      set_confirm_keymap()
-    end,
-  },
+      vim.keymap.set("i", "<TAB>", function()
+        local suggestion = require("copilot.suggestion")
+        if
+            cmp
+            and (
+              cmp.visible() and cmp.get_selected_entry() ~= nil
+              or cmp.visible() and (not suggestion or not suggestion.is_visible())
+            )
+        then
+          vim.defer_fn(function() cmp.confirm({ select = true }) end, 5)
+          return true
+        end
+        if suggestion and suggestion.is_visible() then
+          vim.defer_fn(function() suggestion.accept() end, 5)
+          return true
+        end
+        return "<TAB>"
+      end, { expr = true, remap = true })
+    end
+  }
 })
 
 -- Highlight on yank
@@ -1170,15 +1043,6 @@ autocmd! FileType fzf set laststatus=0 noshowmode noruler cmdheight=1
 ]])
 
 vim.cmd([[colorscheme monokai]])
-
--- Reset scrolloff to 999 everytime a buffer is opened
--- Might be able to remove at some point, not sure what was overriding it
-vim.cmd([[autocmd BufEnter * setlocal scrolloff=999]])
-
--- vim.keymap.set('t', '<esc>', '<C-\\><C-n>')
--- vim.keymap.set('t', '<c-q>>', '<esc>')
--- vim.keymap.set('t', '<c-h>', '<C-\\><C-n>:BufferLineMovePrev<CR>', { silent = true })
--- vim.keymap.set('t', '<c-l>', '<C-\\><C-n>:BufferLineMoveNext<CR>', { silent = true })
 
 -- moving around buffers and stuff
 vim.cmd [[
@@ -1239,19 +1103,11 @@ vim.cmd [[
   nmap Y y$
 ]]
 
-local function safe_require(module)
-  local success, loaded_module = pcall(require, module)
-  if success then
-    return loaded_module
-  end
-  vim.cmd.echo('Error loading ' .. module)
-end
-
-safe_require("modules.statusline")
-safe_require("modules.git_lens")
+require("modules.statusline")
+require("modules.git_lens")
 require("modules.lsp")
-safe_require("modules.fzf")
-safe_require("modules.terminals")
+require("modules.fzf")
+require("modules.terminals")
 
 vim.api.nvim_set_hl(0, "DiffText", { bg = "#6068da" })
 vim.api.nvim_set_hl(0, "WinSeparator", { bg = "#272822", fg = '#949494' })
