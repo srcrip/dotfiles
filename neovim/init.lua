@@ -889,7 +889,7 @@ require("lazy").setup({
       filetypes = {
         ["."] = true,
       },
-      copilot_node_command = "/Users/marble/.asdf/shims/node",
+      copilot_node_command = "node",
       server_opts_overrides = {},
     },
   },
