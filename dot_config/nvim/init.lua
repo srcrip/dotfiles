@@ -2,8 +2,16 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+vim.keymap.set("n", "<leader>rr", function()
+  vim.cmd.source("~/.config/nvim/init.lua")
+  vim.cmd.nohl()
+end, { desc = "Reload config" })
+
+
 -- Basic settings
 vim.o.shell = "/bin/bash"
+vim.o.clipboard = "unnamedplus"
+vim.o.jumpoptions = "stack"
 vim.o.hlsearch = true
 vim.o.textwidth = 120
 vim.o.number = true
@@ -65,8 +73,8 @@ vim.api.nvim_create_user_command("Retab", function()
 end, {})
 
 -- Enable filetype detection and syntax
-vim.cmd("filetype plugin indent on")
-vim.cmd("syntax enable")
+-- vim.cmd("filetype plugin indent on")
+-- vim.cmd("syntax enable")
 
 function map(mode, key, action, opts)
   vim.keymap.set(mode, key, action, opts)
@@ -78,7 +86,8 @@ map("n", "gp", "`[v`]", { noremap = true })
 map("n", "Q", "@q", { noremap = true })
 map("n", "gj", "J", { noremap = true })
 map("n", "<backspace>", "<c-^>", { noremap = true })
-map("n", "<c-g>", ":let @+ = expand(\"%:p\") . \":\" . line(\".\") | echo 'copied ' . @+ . ' to the clipboard.'<CR>", { noremap = true })
+map("n", "<c-g>", ":let @+ = expand(\"%:p\") . \":\" . line(\".\") | echo 'copied ' . @+ . ' to the clipboard.'<CR>",
+  { noremap = true })
 map("n", "}", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"}\"<CR>", { noremap = true, silent = true })
 map("n", "{", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"{\"<CR>", { noremap = true, silent = true })
 map("n", "J", "}", { noremap = true })
@@ -101,6 +110,33 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
 })
 
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+
+vim.keymap.set("n", "<leader>s", vim.cmd.w, { desc = "Save buffer" })
+
+-- restore last cursor position
+vim.api.nvim_create_autocmd("BufRead", {
+  callback = function(opts)
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+      once = true,
+      buffer = opts.buf,
+      callback = function()
+        local ft = vim.bo[opts.buf].filetype
+        local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
+        if
+            not (ft:match("commit") and ft:match("rebase"))
+            and last_known_line > 1
+            and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
+        then
+          vim.api.nvim_feedkeys([[g`"]], "nx", false)
+        end
+      end,
+    })
+  end,
+})
+
+-- set abbreviations
+vim.keymap.set("ca", "WQ", "wq")
+vim.keymap.set("ca", "Wq", "wq")
 
 -- Diagnostic keymaps
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
@@ -169,7 +205,7 @@ vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" }
 
 vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "Highlight when yanking (copying) text",
-  group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
+  group = vim.api.nvim_create_augroup("highlight-yank", { clear = true }),
   callback = function()
     vim.hl.on_yank()
   end,
@@ -177,6 +213,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 vim.pack.add({
   "file:///Users/marble/dev/ultrakai",
+  "https://github.com/nvim-lua/plenary.nvim",
   "https://github.com/ibhagwan/fzf-lua",
   "https://github.com/supermaven-inc/supermaven-nvim",
   "https://github.com/ojroques/nvim-bufdel",
@@ -192,7 +229,10 @@ vim.pack.add({
   "https://github.com/mason-org/mason-lspconfig.nvim",
   "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim",
   "https://github.com/j-hui/fidget.nvim",
-  "https://github.com/mason-org/mason.nvim"
+  "https://github.com/mason-org/mason.nvim",
+  "https://github.com/tpope/vim-fugitive",
+  "https://github.com/lewis6991/gitsigns.nvim",
+  "https://github.com/kosayoda/nvim-lightbulb"
 })
 
 vim.cmd.colorscheme("ultrakai")
@@ -333,6 +373,8 @@ map('x', 'P', '<Plug>(SubversiveSubstitute)')
 -- - sr)'  - [S]urround [R]eplace [)] [']
 require("mini.surround").setup()
 
+require("mini.cursorword").setup()
+
 local statusline = require("mini.statusline")
 
 statusline.setup({ use_icons = vim.g.have_nerd_font })
@@ -412,39 +454,256 @@ require("mason-lspconfig").setup({
   },
 })
 
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
+  callback = function(event)
+    -- NOTE: Remember that Lua is a real programming language, and as such it is possible
+    -- to define small helper and utility functions so you don't have to repeat yourself.
+    --
+    -- In this case, we create a function that lets us more easily define mappings specific
+    -- for LSP related items. It sets the mode, buffer and description for us each time.
+    local map = function(keys, func, desc, mode)
+      mode = mode or "n"
+      vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+    end
+
+    -- Rename the variable under your cursor.
+    --  Most Language Servers support renaming across files, etc.
+    map("grn", vim.lsp.buf.rename, "[R]e[n]ame")
+
+    -- Execute a code action, usually your cursor needs to be on top of an error
+    -- or a suggestion from your LSP for this to activate.
+    map("gra", vim.lsp.buf.code_action, "[G]oto Code [A]ction", { "n", "x" })
+
+    -- Find references for the word under your cursor.
+    -- map("grr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
+
+    -- Jump to the implementation of the word under your cursor.
+    --  Useful when your language has ways of declaring types without an actual implementation.
+    -- map("gri", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
+
+    -- Jump to the definition of the word under your cursor.
+    --  This is where a variable was first declared, or where a function is defined, etc.
+    --  To jump back, press <C-t>.
+    -- map("grd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
+
+    -- WARN: This is not Goto Definition, this is Goto Declaration.
+    --  For example, in C this would take you to the header.
+    map("grD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+
+    -- Fuzzy find all the symbols in your current document.
+    --  Symbols are things like variables, functions, types, etc.
+    -- map("gO", require("telescope.builtin").lsp_document_symbols, "Open Document Symbols")
+
+    -- Fuzzy find all the symbols in your current workspace.
+    --  Similar to document symbols, except searches over your entire project.
+    -- map("gW", require("telescope.builtin").lsp_dynamic_workspace_symbols, "Open Workspace Symbols")
+
+    -- Jump to the type of the word under your cursor.
+    --  Useful when you're not sure what type a variable is and you want to see
+    --  the definition of its *type*, not where it was *defined*.
+    -- map("grt", require("telescope.builtin").lsp_type_definitions, "[G]oto [T]ype Definition")
+
+    map("<leader>k", vim.lsp.buf.hover, "Hover")
+
+    map("<C-k>", vim.lsp.buf.signature_help, "Signature Help")
+
+    -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
+    ---@param client vim.lsp.Client
+    ---@param method vim.lsp.protocol.Method
+    ---@param bufnr? integer some lsp support methods only in specific files
+    ---@return boolean
+    local function client_supports_method(client, method, bufnr)
+      if vim.fn.has("nvim-0.11") == 1 then
+        return client:supports_method(method, bufnr)
+      else
+        return client.supports_method(method, { bufnr = bufnr })
+      end
+    end
+
+    -- The following code creates a keymap to toggle inlay hints in your
+    -- code, if the language server you are using supports them
+    --
+    -- This may be unwanted, since they displace some of your code
+    if
+        client
+        and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf)
+    then
+      map("<leader>th", function()
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+      end, "[T]oggle Inlay [H]ints")
+    end
+  end,
+})
+
 
 local fzf = require("fzf-lua")
+local ivy_profile = require("fzf-lua.profiles.ivy")
 
-fzf.setup()
+fzf.setup {
+  "ivy",
+  winopts = { preview = { default = "bat" }, treesitter = false },
+  manpages = { previewer = "man_native" },
+  helptags = { previewer = "help_native" },
+  defaults = { git_icons = false, file_icons = false },
+  lsp = { code_actions = { previewer = "codeaction_native" } },
+  tags = { previewer = "bat" },
+  btags = { previewer = "bat" },
+  -- files = { fzf_opts = { ["--ansi"] = false } },
+  files = ivy_profile.blines,
+  oldfiles = ivy_profile.blines,
+  grep = {
+    rg_glob = false, -- will trigger `opts.multiprocess = 1`
+    rg_opts =
+    " --color=always --column --line-number --no-heading --smart-case --max-columns=4096 -e",
+  },
+}
 
-vim.cmd [[
-  function! GetVisualSelection()
-    let [line_start, column_start] = getpos("'<")[1:2]
-    let [line_end, column_end] = getpos("'>")[1:2]
-    let lines = getline(line_start, line_end)
+local function yank_selection()
+  vim.cmd('normal! "vy')
 
-    if len(lines) == 0
-      return ""
-    endif
+  return vim.fn.getreg('v')
+end
 
-    let lines[-1] = lines[-1][:column_end - (&selection == "inclusive" ? 1 : 2)]
-    let lines[0] = lines[0][column_start - 1:]
+-- vim.keymap.set("v", "<space>/", ":lua require('fzf-lua').grep_visual()<cr>", { silent = true })
+vim.keymap.set("v", "<space>/", fzf.grep_visual, { desc = "Search project" })
+vim.keymap.set("n", "<space>/", fzf.grep_project, { desc = "Search project" })
 
-    return join(lines, "\n")
-  endfunction
-]]
+vim.keymap.set("n", "<space>h", fzf.help_tags, { desc = "Search help" })
+vim.keymap.set("v", "<space>h", function() fzf.help_tags({ query = yank_selection() }) end,
+  { desc = "Search help" })
 
-vim.keymap.set("v", "<space>/", ":lua require('fzf-lua').grep_visual()<cr>", { silent = true })
-vim.keymap.set("n", "<space>/", ":FzfLua live_grep<cr>", { silent = true })
-vim.keymap.set("n", "<space>h", ":FzfLua help_tags<cr>", { silent = true })
-vim.keymap.set("n", "<space>fr", ":FzfLua oldfiles<cr>", { silent = true })
-vim.keymap.set("n", "<space><cr>", ":FzfLua resume<cr>", { silent = true })
-vim.keymap.set("n", "<space><space>", ":FzfLua files<cr>", { silent = true })
+vim.keymap.set("n", "<space>fr", fzf.oldfiles, { desc = "Recent files" })
+vim.keymap.set("v", "<space>fr", function() fzf.oldfiles({ query = yank_selection() }) end,
+  { desc = "Recent files" })
 
--- load other modules
-require("modules.settings")
-require("modules.git_lens")
+vim.keymap.set("n", "<space><space>", fzf.files, { desc = "Find files" })
+vim.keymap.set("v", "<space><space>", function() fzf.files({ query = yank_selection() }) end,
+  { desc = "Find files" })
 
--- configure stuff not directly related to a plugin
+vim.keymap.set("n", "<space><cr>", fzf.resume, { desc = "Resume last search" })
+
+vim.keymap.set("n", "<space>ff", fzf.builtin, { desc = "Available pickers" })
+
+vim.keymap.set("n", "<space>fd", fzf.diagnostics_document, { desc = "Diagnostics from document" })
+vim.keymap.set("n", "<space>fc", fzf.diagnostics_workspace, { desc = "Diagnostics from workspace" })
+
+-- fugitive / git stuff
+vim.keymap.set("n", "<space>gg", ":Git<cr>", { silent = true })
+vim.keymap.set("n", "<space>gb", ":Git blame<CR>", { silent = true })
+
+vim.cmd([[
+  augroup FugitiveMappings
+    autocmd!
+    autocmd FileType fugitive nmap <buffer> <Tab> =
+
+    autocmd FileType fugitive set bufhidden=
+  augroup END
+]])
+
+vim.cmd("autocmd FileType gitcommit setlocal spell")
+
+require("gitsigns").setup({
+  signs = {
+    add = { text = "┃" },
+    change = { text = "┃" },
+    delete = { text = "_" },
+    topdelete = { text = "‾" },
+    changedelete = { text = "~" },
+    untracked = { text = "┆" },
+  },
+  signs_staged = {
+    add = { text = "┃" },
+    change = { text = "┃" },
+    delete = { text = "_" },
+    topdelete = { text = "‾" },
+    changedelete = { text = "~" },
+    untracked = { text = "┆" },
+  },
+  signs_staged_enable = true,
+  signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`
+  numhl = false,     -- Toggle with `:Gitsigns toggle_numhl`
+  linehl = false,    -- Toggle with `:Gitsigns toggle_linehl`
+  word_diff = false, -- Toggle with `:Gitsigns toggle_word_diff`
+  watch_gitdir = {
+    follow_files = true,
+  },
+  auto_attach = true,
+  attach_to_untracked = false,
+  current_line_blame = true, -- Toggle with `:Gitsigns toggle_current_line_blame`
+  current_line_blame_opts = {
+    virt_text = true,
+    virt_text_pos = "eol", -- 'eol' | 'overlay' | 'right_align'
+    delay = 300,
+    ignore_whitespace = false,
+    virt_text_priority = 100,
+  },
+  -- shows pr numbers in blame
+  gh = true,
+  current_line_blame_formatter = "<author>, <author_time:%R> - <summary>",
+  sign_priority = 6,
+  update_debounce = 100,
+  status_formatter = nil,  -- Use default
+  max_file_length = 40000, -- Disable if file is longer than this (in lines)
+  preview_config = {
+    -- Options passed to nvim_open_win
+    border = "single",
+    style = "minimal",
+    relative = "cursor",
+    row = 0,
+    col = 1,
+  },
+  on_attach = function(bufnr)
+    local gitsigns = require("gitsigns")
+
+    -- local function map(mode, l, r, opts)
+    --   opts = opts or {}
+    --   opts.buffer = bufnr
+    --   vim.keymap.set(mode, l, r, opts)
+    -- end
+
+    -- Navigation
+    map("n", "]c", function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        gitsigns.nav_hunk("next")
+      end
+    end)
+
+    map("n", "[c", function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        gitsigns.nav_hunk("prev")
+      end
+    end)
+
+    -- Actions
+    -- map('n', '<leader>hs', gitsigns.stage_hunk)
+    -- map('n', '<leader>hr', gitsigns.reset_hunk)
+    -- map('v', '<leader>hs', function() gitsigns.stage_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
+    -- map('v', '<leader>hr', function() gitsigns.reset_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
+    -- map('n', '<leader>hS', gitsigns.stage_buffer)
+    -- map('n', '<leader>hu', gitsigns.undo_stage_hunk)
+    -- map('n', '<leader>hR', gitsigns.reset_buffer)
+    map("n", "<leader>hp", gitsigns.preview_hunk)
+    -- map('n', '<leader>hb', function() gitsigns.blame_line { full = true } end)
+    -- map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
+    map("n", "<leader>hd", gitsigns.diffthis)
+    map("n", "<leader>hD", function()
+      gitsigns.diffthis("~")
+    end)
+    map("n", "<leader>td", gitsigns.toggle_deleted)
+
+    -- Text object
+    map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>")
+  end,
+})
+
+require("nvim-lightbulb").setup({
+  autocmd = { enabled = true }
+})
+
 vim.cmd.source("~/.config/nvim/ranger.vim")
 map("n", "-", "<cmd>Ranger<CR>", { desc = "Open ranger" })

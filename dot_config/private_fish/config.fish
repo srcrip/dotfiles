@@ -1,9 +1,12 @@
 # abbreviations and aliases
 alias vim="nvim"
-alias vimrc="nvim ~/.config/nvim/init.lua"
-alias fishrc="nvim ~/.config/fish/config.fish"
 alias q="ranger"
 alias ls="eza"
+
+# editing my most often used files
+alias vimrc="nvim ~/.config/nvim/init.lua"
+alias fishrc="nvim ~/.config/fish/config.fish"
+abbr --add cmf "nvim (chezmoi managed --include=files --path-style=absolute | fzf)"
 
 abbr --add cm chezmoi
 abbr --add cmd "cd ~/.local/share/chezmoi/"
