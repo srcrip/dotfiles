@@ -213,6 +213,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 vim.pack.add({
   "file:///Users/marble/dev/ultrakai",
+  -- "file:///Users/marble/dev/lookup.nvim",
   "https://github.com/nvim-lua/plenary.nvim",
   "https://github.com/ibhagwan/fzf-lua",
   "https://github.com/supermaven-inc/supermaven-nvim",
@@ -232,8 +233,14 @@ vim.pack.add({
   "https://github.com/mason-org/mason.nvim",
   "https://github.com/tpope/vim-fugitive",
   "https://github.com/lewis6991/gitsigns.nvim",
-  "https://github.com/kosayoda/nvim-lightbulb"
+  "https://github.com/kosayoda/nvim-lightbulb",
+  "https://github.com/olimorris/codecompanion.nvim"
 })
+
+-- require("lookup").setup({
+--   use_telescope = false,
+--   use_fzf_lua = true
+-- })
 
 vim.cmd.colorscheme("ultrakai")
 
@@ -597,6 +604,7 @@ vim.cmd([[
     autocmd!
     autocmd FileType fugitive nmap <buffer> <Tab> =
 
+    " prevent fugitive buffers from being deleted when you leave them
     autocmd FileType fugitive set bufhidden=
   augroup END
 ]])
@@ -704,6 +712,22 @@ require("gitsigns").setup({
 require("nvim-lightbulb").setup({
   autocmd = { enabled = true }
 })
+
+
+-- Here be AI stuff
+require("codecompanion").setup {
+  strategies = {
+    chat = {
+      adapter = "anthropic",
+    },
+    inline = {
+      adapter = "anthropic",
+    },
+    cmd = {
+      adapter = "anthropic",
+    }
+  },
+}
 
 vim.cmd.source("~/.config/nvim/ranger.vim")
 map("n", "-", "<cmd>Ranger<CR>", { desc = "Open ranger" })
