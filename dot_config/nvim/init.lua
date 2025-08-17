@@ -27,7 +27,7 @@ vim.o.ttimeoutlen = 100
 vim.o.updatetime = 250
 vim.o.tabstop = 2
 vim.o.scrolloff = 999
--- vim.o.noswapfile = true
+vim.o.swapfile = false
 vim.o.title = true
 vim.o.expandtab = true
 vim.o.shiftwidth = 2
@@ -90,11 +90,11 @@ map("n", "<c-g>", ":let @+ = expand(\"%:p\") . \":\" . line(\".\") | echo 'copie
   { noremap = true })
 map("n", "}", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"}\"<CR>", { noremap = true, silent = true })
 map("n", "{", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"{\"<CR>", { noremap = true, silent = true })
-map("n", "J", "}", { noremap = true })
-map("n", "K", "{", { noremap = true })
+map({ "n", "v" }, "J", "}", { noremap = true })
+map({ "n", "v" }, "K", "{", { noremap = true })
 map("n", "gf", "gF", { noremap = true })
-map("n", "H", "^", { noremap = true })
-map("n", "L", "$", { noremap = true })
+map({ "n", "v" }, "H", "^", { noremap = true })
+map({ "n", "v" }, "L", "$", { noremap = true })
 map("n", "j", "gj", { noremap = true })
 map("n", "k", "gk", { noremap = true })
 
@@ -234,13 +234,33 @@ vim.pack.add({
   "https://github.com/tpope/vim-fugitive",
   "https://github.com/lewis6991/gitsigns.nvim",
   "https://github.com/kosayoda/nvim-lightbulb",
-  "https://github.com/olimorris/codecompanion.nvim"
+  "https://github.com/olimorris/codecompanion.nvim",
+  "https://github.com/notjedi/nvim-rooter.lua"
 })
+
+vim.cmd('packadd lookup.nvim')
+-- require("lookup.nvim").setup()
+
+local lookup = require('lookup')
+lookup.setup({
+  use_lsp = true,    -- or false to disable LSP
+  picker = 'fzf-lua' -- Options: 'telescope', 'fzf-lua', 'snacks', 'builtin'
+})
+
+vim.keymap.set("n", "gd", lookup.lookup_definition)
 
 -- require("lookup").setup({
 --   use_telescope = false,
 --   use_fzf_lua = true
 -- })
+
+require('nvim-rooter').setup {
+  rooter_patterns = { 'mix.exs', '.git' },
+  trigger_patterns = { '*' },
+  manual = false,
+  fallback_to_parent = false,
+  cd_scope = "global",
+}
 
 vim.cmd.colorscheme("ultrakai")
 
@@ -433,8 +453,11 @@ require("mason").setup()
 require("fidget").setup()
 
 local servers = {
-  ["elixir-ls"] = {},
+  ["elixir-ls"] = {
+    -- root_dir = require("lspconfig.util").root_pattern("mix.exs", ".git"),
+  },
   lua_ls = {},
+  ts_ls = {},
 }
 
 local ensure_installed = vim.tbl_keys(servers or {})
@@ -493,6 +516,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     --  This is where a variable was first declared, or where a function is defined, etc.
     --  To jump back, press <C-t>.
     -- map("grd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
+    -- map("grd", require("fzf-lua").lsp_definitions, "[G]oto [D]efinition")
+    map("grd", vim.lsp.buf.definition, "[G]oto [D]efinition")
 
     -- WARN: This is not Goto Definition, this is Goto Declaration.
     --  For example, in C this would take you to the header.
@@ -731,3 +756,73 @@ require("codecompanion").setup {
 
 vim.cmd.source("~/.config/nvim/ranger.vim")
 map("n", "-", "<cmd>Ranger<CR>", { desc = "Open ranger" })
+
+---@type boolean
+local auto_hover_enabled = true
+-- vim.o.updatetime = 2000
+
+vim.pack.add({ "https://github.com/sj2tpgk/nvim-eldoc" })
+
+require("nvim-eldoc").setup()
+
+local lsp_hover_augroup = vim.api.nvim_create_augroup("LspHoverOnHold", { clear = true })
+
+vim.api.nvim_create_autocmd("CursorHold", {
+  group = lsp_hover_augroup,
+  pattern = "*",
+  callback = function()
+    if not auto_hover_enabled then
+      return
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients { bufnr = bufnr }
+
+    ---@type boolean
+    local has_hover_provider = false
+    for _, client in ipairs(clients) do
+      if client and client.server_capabilities and client.server_capabilities.hoverProvider then
+        has_hover_provider = true
+        break
+      end
+    end
+
+    if not has_hover_provider then
+      return
+    end
+
+    local handler = function(err, result, _, _)
+      if err or not result or not result.contents then
+        return
+      end
+
+      local lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+
+      if vim.tbl_isempty(lines) then
+        return
+      end
+
+      vim.lsp.util.open_floating_preview(lines, "markdown", {
+        border = "rounded",
+        relative = "editor",
+        offset_x = vim.o.columns,
+      })
+    end
+
+    local params = vim.lsp.util.make_position_params(0, "utf-32")
+    vim.lsp.buf_request(bufnr, "textDocument/hover", params, handler)
+  end,
+  desc = "Show LSP hover documentation on CursorHold (silently ignores empty responses)",
+})
+
+local function toggle_auto_hover()
+  auto_hover_enabled = not auto_hover_enabled
+  if auto_hover_enabled then
+    vim.notify("Auto Hover enabled", vim.log.levels.INFO, { title = "LSP" })
+  else
+    vim.notify("Auto Hover disabled", vim.log.levels.INFO, { title = "LSP" })
+  end
+end
+
+vim.keymap.set("n", "<leader><leader>Th", toggle_auto_hover,
+  { desc = "Toggle LSP auto hover", noremap = false, silent = true })
