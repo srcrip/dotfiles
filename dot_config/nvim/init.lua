@@ -68,20 +68,18 @@ vim.api.nvim_create_user_command("Retab", function()
   vim.cmd("retab")
 end, {})
 
--- Enable filetype detection and syntax
--- vim.cmd("filetype plugin indent on")
--- vim.cmd("syntax enable")
-
 function map(mode, key, action, opts)
   vim.keymap.set(mode, key, action, opts)
 end
 
--- Normal mode mappings
+-- Normal mode mappings - RESOLVED CONFLICT
 vim.keymap.set("n", "<ESC>", ":noh<CR><ESC>", { noremap = true, silent = true })
 vim.keymap.set("n", "gp", "`[v`]", { noremap = true })
 vim.keymap.set("n", "Q", "@q", { noremap = true })
 vim.keymap.set("n", "gj", "J", { noremap = true })
 vim.keymap.set("n", "<backspace>", "<c-^>", { noremap = true })
+
+-- Improved <c-g> function from HEAD
 vim.keymap.set('n', '<c-g>', function()
   local filepath = vim.fn.expand('%')
   if filepath == '' then
@@ -93,13 +91,16 @@ vim.keymap.set('n', '<c-g>', function()
     print(filepath_with_line .. ' (copied to clipboard)')
   end
 end, { desc = 'Print and copy relative path to current file with line number' })
+
 vim.keymap.set("n", "}", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"}\"<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "{", ":<C-u>execute \"keepjumps norm! \" . v:count1 . \"{\"<CR>", { noremap = true, silent = true })
+
+-- Apply to both normal and visual modes for better consistency
 vim.keymap.set({ "n", "v" }, "J", "}", { noremap = true })
 vim.keymap.set({ "n", "v" }, "K", "{", { noremap = true })
 vim.keymap.set("n", "gf", "gF", { noremap = true })
-vim.keymap.set("n", "H", "^", { noremap = true })
-vim.keymap.set("n", "L", "$", { noremap = true })
+vim.keymap.set({ "n", "v" }, "H", "^", { noremap = true })
+vim.keymap.set({ "n", "v" }, "L", "$", { noremap = true })
 vim.keymap.set("n", "j", "gj", { noremap = true })
 vim.keymap.set("n", "k", "gk", { noremap = true })
 
@@ -224,8 +225,6 @@ vim.api.nvim_create_autocmd('PackChanged', {
   desc = 'Run post installation commands',
   ---@param args {data:{kind:'install'|'update'|'delete', spec:vim.pack.SpecResolved, path:string}}
   callback = function(args)
-    -- vim.notify('PackChanged: ' .. vim.inspect(args), vim.log.levels.DEBUG)
-
     if args.data.kind ~= 'update' then
       return
     end
@@ -252,16 +251,11 @@ vim.api.nvim_create_autocmd('PackChanged', {
   end,
 })
 
--- todo: try out: https://github.com/mawkler/demicolon.nvim
-
+-- PLUGIN LIST - RESOLVED CONFLICT: Include all plugins from both branches
 vim.pack.add({
   "https://github.com/nvim-treesitter/nvim-treesitter-context",
   "https://github.com/windwp/nvim-ts-autotag",
-  -- "https://github.com/HawkinsT/pathfinder.nvim",
   "https://github.com/folke/flash.nvim",
-  -- "https://github.com/srcrip/ultrakai",
-  -- "file:///Users/marble/dev/lookup.nvim",
-  -- "https://github.com/srcrip/lookup.nvim",
   "https://github.com/nvim-lua/plenary.nvim",
   "https://github.com/ibhagwan/fzf-lua",
   "https://github.com/supermaven-inc/supermaven-nvim",
@@ -275,8 +269,8 @@ vim.pack.add({
   "https://github.com/echasnovski/mini.nvim",
   "https://github.com/nvim-treesitter/nvim-treesitter",
   "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
-  -- "https://github.com/neovim/nvim-lspconfig",
-  -- "https://github.com/mason-org/mason-lspconfig.nvim",
+  "https://github.com/neovim/nvim-lspconfig",
+  "https://github.com/mason-org/mason-lspconfig.nvim",
   "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim",
   "https://github.com/j-hui/fidget.nvim",
   "https://github.com/mason-org/mason.nvim",
@@ -286,28 +280,23 @@ vim.pack.add({
   "https://github.com/lewis6991/gitsigns.nvim",
   "https://github.com/kosayoda/nvim-lightbulb",
   "https://github.com/olimorris/codecompanion.nvim",
-  "https://github.com/vim-test/vim-test",
-  "https://github.com/Saghen/blink.cmp"
+  "https://github.com/vim-test/vim-test",      -- from HEAD
+  "https://github.com/Saghen/blink.cmp",       -- from HEAD
+  "https://github.com/notjedi/nvim-rooter.lua" -- from incoming
 }, { load = true })
 
+-- PLUGIN SETUP - RESOLVED CONFLICT: Combine both setups
+
+-- nvim-ts-autotag setup
 require('nvim-ts-autotag').setup({
   opts = {
-    -- Defaults
-    enable_close = true,          -- Auto close tags
-    enable_rename = true,         -- Auto rename pairs of tags
-    enable_close_on_slash = false -- Auto close on trailing </
+    enable_close = true,
+    enable_rename = true,
+    enable_close_on_slash = false
   },
-  -- -- Also override individual filetype configs, these take priority.
-  -- -- Empty by default, useful if one of the "opts" global settings
-  -- -- doesn't work well in a specific filetype
-  -- per_filetype = {
-  --   ["html"] = {
-  --     enable_close = false
-  --   }
-  -- }
 })
 
-
+-- Yanky setup from HEAD with full configuration
 require("yanky").setup {
   highlight = {
     on_put = true,
@@ -321,15 +310,13 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   callback = function()
     vim.api.nvim_set_hl(0, "CurSearch", { fg = "#EEEEEE", bg = "#008bb5" })
     vim.api.nvim_set_hl(0, "Search", { bg = "#585e6e" })
-
     vim.api.nvim_set_hl(0, "YankyPut", { link = "CurSearch" })
     vim.api.nvim_set_hl(0, "YankyYanked", { link = "CurSearch" })
-
     vim.api.nvim_set_hl(0, "Folded", { fg = "#75715E", bg = "#272822" })
   end,
 })
 
--- see: https://github.com/gbprod/yanky.nvim?tab=readme-ov-file#%EF%B8%8F-mappings
+-- Yanky keymaps
 vim.keymap.set({ "n", "x" }, "p", "<Plug>(YankyPutAfter)")
 vim.keymap.set({ "n", "x" }, "P", "<Plug>(YankyPutBefore)")
 vim.keymap.set({ "n", "x" }, "gp", "<Plug>(YankyGPutAfter)")
@@ -338,7 +325,6 @@ vim.keymap.set({ "n", "x" }, "gP", "<Plug>(YankyGPutBefore)")
 vim.keymap.set("n", "<c-p>", "<Plug>(YankyPreviousEntry)")
 vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
 
--- unimpaired style
 vim.keymap.set("n", "]p", "<Plug>(YankyPutIndentAfterLinewise)")
 vim.keymap.set("n", "[p", "<Plug>(YankyPutIndentBeforeLinewise)")
 vim.keymap.set("n", "]P", "<Plug>(YankyPutIndentAfterLinewise)")
@@ -352,24 +338,31 @@ vim.keymap.set("n", "<P", "<Plug>(YankyPutIndentBeforeShiftLeft)")
 vim.keymap.set("n", "=p", "<Plug>(YankyPutAfterFilter)")
 vim.keymap.set("n", "=P", "<Plug>(YankyPutBeforeFilter)")
 
+-- Blink.cmp setup for codecompanion
 require("blink.cmp").setup {
   signature = { enabled = true },
   enabled = function()
-    -- Enable only in specific filetypes
     local filetypes = { 'codecompanion' }
     return vim.tbl_contains(filetypes, vim.bo.filetype)
   end,
 }
 
--- packadd lookup.nvim
+-- Lookup plugin setup
 vim.cmd.packadd("lookup.nvim")
-
 require('lookup').setup({
   use_lsp = true,
   picker = 'fzf-lua',
 })
-
 vim.keymap.set('n', 'gd', require('lookup').lookup_definition, { desc = 'Go to definition' })
+
+-- nvim-rooter setup from incoming branch
+require('nvim-rooter').setup {
+  rooter_patterns = { 'mix.exs', '.git' },
+  trigger_patterns = { '*' },
+  manual = false,
+  fallback_to_parent = false,
+  cd_scope = "global",
+}
 
 vim.cmd.colorscheme("ultrakai")
 
@@ -387,7 +380,6 @@ require("which-key").setup {
     { "<leader>f", group = "[F]ind" },
     { "<leader>t", group = "[T]ests" },
     { "<leader>d", group = "[D]iagnostics" },
-    -- { "<leader>td", group = "[T]oggle [D]iagnostics" },
     { "<leader>h", group = "Git [H]unk",   mode = { "n", "v" } },
   }
 }
@@ -507,14 +499,10 @@ map('x', 's', '<Plug>(SubversiveSubstitute)')
 map('x', 'p', '<Plug>(SubversiveSubstitute)')
 map('x', 'P', '<Plug>(SubversiveSubstitute)')
 
--- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
--- - sd'   - [S]urround [D]elete [']quotes
--- - sr)'  - [S]urround [R]eplace [)] [']
 require("mini.surround").setup()
 
 require('mini.ai').setup({
   custom_textobjects = {
-    -- Configure 'b' to match any bracket or quote
     b = {
       { '%b()', '%b[]', '%b{}', '%b""', "%b''" },
       '^.().*().$'
@@ -525,7 +513,6 @@ require('mini.ai').setup({
 require("mini.cursorword").setup()
 
 local statusline = require("mini.statusline")
-
 statusline.setup({ use_icons = vim.g.have_nerd_font })
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -534,148 +521,125 @@ statusline.section_location = function()
 end
 
 require("nvim-treesitter.configs").setup {
-  -- Missing required fields
   modules = {},
   sync_install = false,
   ignore_install = {},
 
   ensure_installed = {
-    "bash",
-    "c",
-    "diff",
-    "html",
-    "lua",
-    "luadoc",
-    "markdown",
-    "markdown_inline",
-    "query",
-    "vim",
-    "vimdoc",
-    "elixir",
-    "heex",
-    "eex",
-    "gleam",
-    "rust",
-    "tsx",
-    "javascript",
-    "typescript",
-    "svelte",
-    "css",
-    "astro",
+    "bash", "c", "diff", "html", "lua", "luadoc", "markdown", "markdown_inline",
+    "query", "vim", "vimdoc", "elixir", "heex", "eex", "gleam", "rust",
+    "tsx", "javascript", "typescript", "svelte", "css", "astro",
   },
   auto_install = true,
   highlight = {
     enable = true,
-    -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-    --  If you are experiencing weird indenting issues, add the language to
-    --  the list of additional_vim_regex_highlighting and disabled languages for indent.
     additional_vim_regex_highlighting = { "ruby" },
   },
   indent = { enable = true, disable = { "ruby" } },
   textobjects = {
     select = {
       enable = true,
-      -- Automatically jump forward to textobj, similar to targets.vim
       lookahead = true,
       keymaps = {
-        -- You can use the capture groups defined in textobjects.scm
         ["af"] = "@function.outer",
         ["if"] = "@function.inner",
         ["ac"] = "@class.outer",
-        -- You can optionally set descriptions to the mappings (used in the desc parameter of
-        -- nvim_buf_set_keymap) which plugins like which-key display
         ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-        -- You can also use captures from other query groups like `locals.scm`
         ["as"] = { query = "@local.scope", query_group = "locals", desc = "Select language scope" },
         ["aa"] = "@attribute.outer",
         ["ia"] = "@attribute.inner",
-        -- -- doesnt seem to work with react
-        -- ["ae"] = "@element.outer",
-        -- ["ie"] = "@element.inner",
         ["ie"] = "@jsx_element.inner",
         ["ae"] = "@jsx_element.outer",
-
         ["ah"] = "@heex.outer",
       },
-      -- You can choose the select mode (default is charwise 'v')
-      --
-      -- Can also be a function which gets passed a table with the keys
-      -- * query_string: eg '@function.inner'
-      -- * method: eg 'v' or 'o'
-      -- and should return the mode ('v', 'V', or '<c-v>') or a table
-      -- mapping query_strings to modes.
       selection_modes = {
-        ['@parameter.outer'] = 'v', -- charwise
-        ['@function.outer'] = 'V',  -- linewise
-        ['@class.outer'] = '<c-v>', -- blockwise
+        ['@parameter.outer'] = 'v',
+        ['@function.outer'] = 'V',
+        ['@class.outer'] = '<c-v>',
       },
-      -- If you set this to `true` (default is `false`) then any textobject is
-      -- extended to include preceding or succeeding whitespace. Succeeding
-      -- whitespace has priority in order to act similarly to eg the built-in
-      -- `ap`.
-      --
-      -- Can also be a function which gets passed a table with the keys
-      -- * query_string: eg '@function.inner'
-      -- * selection_mode: eg 'v'
-      -- and should return true or false
       include_surrounding_whitespace = true,
     },
   },
 }
 
 require 'treesitter-context'.setup {
-  enable = true,            -- Enable this plugin (Can be enabled/disabled later via commands)
-  multiwindow = false,      -- Enable multiwindow support.
-  max_lines = 1,            -- How many lines the window should span. Values <= 0 mean no limit.
-  min_window_height = 0,    -- Minimum editor window height to enable context. Values <= 0 mean no limit.
+  enable = true,
+  multiwindow = false,
+  max_lines = 1,
+  min_window_height = 0,
   line_numbers = true,
-  multiline_threshold = 20, -- Maximum number of lines to show for a single context
-  trim_scope = 'outer',     -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
-  mode = 'cursor',          -- Line used to calculate context. Choices: 'cursor', 'topline'
-  -- Separator between context and content. Should be a single character string, like '-'.
-  -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
+  multiline_threshold = 20,
+  trim_scope = 'outer',
+  mode = 'cursor',
   separator = nil,
-  zindex = 20,     -- The Z-index of the context window
-  on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
+  zindex = 20,
+  on_attach = nil,
 }
 
--- vim.api.nvim_set_hl(0, "TreesitterContext", { bg = "#272822" })
-
--- LSP setup
--- require("lspconfig").setup()
+-- LSP SETUP - RESOLVED CONFLICT: Use complete LSP setup from incoming branch
 require("mason").setup()
 require("fidget").setup()
 
--- local servers = {
---   ["elixir-ls"] = {},
---   lua_ls = {},
--- }
---
--- local ensure_installed = vim.tbl_keys(servers or {})
---
--- vim.list_extend(ensure_installed, {
---   -- can use this to make sure mason installs stuff other than the lsp's above
---   -- "prettierd",
--- })
---
--- require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
+local servers = {
+  ["elixir-ls"] = {},
+  lua_ls = {},
+  ts_ls = {},
+}
 
--- require("mason-lspconfig").setup({
---   ensure_installed = {}, -- explicitly set to an empty table (installs via mason-tool-installer instead)
---   automatic_installation = false,
---   handlers = {
---     function(server_name)
---       local server = servers[server_name] or {}
---       -- This handles overriding only values explicitly passed
---       -- by the server configuration above. Useful when disabling
---       -- certain features of an LSP (for example, turning off formatting for ts_ls)
---       server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
---       require("lspconfig")[server_name].setup(server)
---     end,
---   },
--- })
+local ensure_installed = vim.tbl_keys(servers or {})
 
+require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
+-- Get capabilities for LSP
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+
+require("mason-lspconfig").setup({
+  ensure_installed = {},
+  automatic_installation = false,
+  handlers = {
+    function(server_name)
+      local server = servers[server_name] or {}
+      server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
+      require("lspconfig")[server_name].setup(server)
+    end,
+  },
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
+  callback = function(event)
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+    local map = function(keys, func, desc, mode)
+      mode = mode or "n"
+      vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+    end
+
+    map("grn", vim.lsp.buf.rename, "[R]e[n]ame")
+    map("gra", vim.lsp.buf.code_action, "[G]oto Code [A]ction", { "n", "x" })
+    map("grd", vim.lsp.buf.definition, "[G]oto [D]efinition")
+    map("grD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+    map("<leader>k", vim.lsp.buf.hover, "Hover")
+    map("<C-k>", vim.lsp.buf.signature_help, "Signature Help")
+
+    -- Inlay hints toggle
+    local function client_supports_method(client, method, bufnr)
+      if vim.fn.has("nvim-0.11") == 1 then
+        return client:supports_method(method, bufnr)
+      else
+        return client.supports_method(method, { bufnr = bufnr })
+      end
+    end
+
+    if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+      map("<leader>th", function()
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+      end, "[T]oggle Inlay [H]ints")
+    end
+  end,
+})
+
+-- FZF-Lua setup
 local fzf = require("fzf-lua")
 local ivy_profile = require("fzf-lua.profiles.ivy")
 local defaults = require("fzf-lua.defaults")
@@ -689,52 +653,36 @@ fzf.setup {
   lsp = { code_actions = { previewer = "codeaction_native" } },
   tags = { previewer = "bat" },
   btags = { previewer = "bat" },
-  -- oldfiles = ivy_profile.lines,
-
-
   oldfiles = vim.tbl_extend("force", ivy_profile.blines,
     { actions = defaults.globals.actions.files }
   ),
-
   files = ivy_profile.lines,
   jumps = ivy_profile.blines,
   grep = {
-    rg_glob = false, -- will trigger `opts.multiprocess = 1`
-    rg_opts =
-    " --color=always --column --line-number --no-heading --smart-case --max-columns=4096 -e",
+    rg_glob = false,
+    rg_opts = " --color=always --column --line-number --no-heading --smart-case --max-columns=4096 -e",
   },
 }
 
 local function yank_selection()
   vim.cmd('normal! "vy')
-
   return vim.fn.getreg('v')
 end
 
--- vim.keymap.set("v", "<space>/", ":lua require('fzf-lua').grep_visual()<cr>", { silent = true })
 vim.keymap.set("v", "<space>/", fzf.grep_visual, { desc = "Search project" })
 vim.keymap.set("n", "<space>/", fzf.grep_project, { desc = "Search project" })
-
 vim.keymap.set("n", "<space>h", fzf.help_tags, { desc = "Search help" })
-vim.keymap.set("v", "<space>h", function() fzf.help_tags({ query = yank_selection() }) end,
-  { desc = "Search help" })
-
+vim.keymap.set("v", "<space>h", function() fzf.help_tags({ query = yank_selection() }) end, { desc = "Search help" })
 vim.keymap.set("n", "<space>fr", fzf.oldfiles, { desc = "Recent files" })
-vim.keymap.set("v", "<space>fr", function() fzf.oldfiles({ query = yank_selection() }) end,
-  { desc = "Recent files" })
-
+vim.keymap.set("v", "<space>fr", function() fzf.oldfiles({ query = yank_selection() }) end, { desc = "Recent files" })
 vim.keymap.set("n", "<space><space>", fzf.files, { desc = "Find files" })
-vim.keymap.set("v", "<space><space>", function() fzf.files({ query = yank_selection() }) end,
-  { desc = "Find files" })
-
+vim.keymap.set("v", "<space><space>", function() fzf.files({ query = yank_selection() }) end, { desc = "Find files" })
 vim.keymap.set("n", "<space><cr>", fzf.resume, { desc = "Resume last search" })
-
 vim.keymap.set("n", "<space>ff", fzf.builtin, { desc = "Available pickers" })
-
 vim.keymap.set("n", "<space>fd", fzf.diagnostics_document, { desc = "Diagnostics from document" })
 vim.keymap.set("n", "<space>fc", fzf.diagnostics_workspace, { desc = "Diagnostics from workspace" })
 
--- fugitive / git stuff
+-- Git setup
 vim.keymap.set("n", "<space>gg", ":Git<cr>", { silent = true })
 vim.keymap.set("n", "<space>gb", ":Gitsigns blame<cr>", { silent = true })
 
@@ -742,10 +690,6 @@ vim.cmd([[
   augroup FugitiveMappings
     autocmd!
     autocmd FileType fugitive nmap <buffer> <Tab> =
-
-    "todo: this effects the status buffer and commits, figure out how to only make it affect commit buffers?
-    " prevent fugitive buffers from being deleted when you leave them
-    "autocmd FileType fugitive set bufhidden=
   augroup END
 ]])
 
@@ -769,32 +713,28 @@ require("gitsigns").setup({
     untracked = { text = "┆" },
   },
   signs_staged_enable = true,
-  signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`
-  numhl = false,     -- Toggle with `:Gitsigns toggle_numhl`
-  linehl = false,    -- Toggle with `:Gitsigns toggle_linehl`
-  word_diff = false, -- Toggle with `:Gitsigns toggle_word_diff`
-  watch_gitdir = {
-    follow_files = true,
-  },
+  signcolumn = true,
+  numhl = false,
+  linehl = false,
+  word_diff = false,
+  watch_gitdir = { follow_files = true },
   auto_attach = true,
   attach_to_untracked = false,
-  current_line_blame = true, -- Toggle with `:Gitsigns toggle_current_line_blame`
+  current_line_blame = true,
   current_line_blame_opts = {
     virt_text = true,
-    virt_text_pos = "eol", -- 'eol' | 'overlay' | 'right_align'
+    virt_text_pos = "eol",
     delay = 300,
     ignore_whitespace = false,
     virt_text_priority = 100,
   },
-  -- shows pr numbers in blame
   gh = true,
   current_line_blame_formatter = "<author>, <author_time:%R> - <summary>",
   sign_priority = 6,
   update_debounce = 100,
-  status_formatter = nil,  -- Use default
-  max_file_length = 40000, -- Disable if file is longer than this (in lines)
+  status_formatter = nil,
+  max_file_length = 40000,
   preview_config = {
-    -- Options passed to nvim_open_win
     border = "single",
     style = "minimal",
     relative = "cursor",
@@ -804,13 +744,6 @@ require("gitsigns").setup({
   on_attach = function(bufnr)
     local gitsigns = require("gitsigns")
 
-    -- local function map(mode, l, r, opts)
-    --   opts = opts or {}
-    --   opts.buffer = bufnr
-    --   vim.keymap.set(mode, l, r, opts)
-    -- end
-
-    -- Navigation
     map("n", "]c", function()
       if vim.wo.diff then
         vim.cmd.normal({ "]c", bang = true })
@@ -827,24 +760,10 @@ require("gitsigns").setup({
       end
     end)
 
-    -- Actions
-    -- map('n', '<leader>hs', gitsigns.stage_hunk)
-    -- map('n', '<leader>hr', gitsigns.reset_hunk)
-    -- map('v', '<leader>hs', function() gitsigns.stage_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
-    -- map('v', '<leader>hr', function() gitsigns.reset_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
-    -- map('n', '<leader>hS', gitsigns.stage_buffer)
-    -- map('n', '<leader>hu', gitsigns.undo_stage_hunk)
-    -- map('n', '<leader>hR', gitsigns.reset_buffer)
     map("n", "<leader>hp", gitsigns.preview_hunk)
-    -- map('n', '<leader>hb', function() gitsigns.blame_line { full = true } end)
-    -- map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
     map("n", "<leader>hd", gitsigns.diffthis)
-    map("n", "<leader>hD", function()
-      gitsigns.diffthis("~")
-    end)
+    map("n", "<leader>hD", function() gitsigns.diffthis("~") end)
     map("n", "<leader>td", gitsigns.toggle_deleted)
-
-    -- Text object
     map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>")
   end,
 })
@@ -855,16 +774,7 @@ require("nvim-lightbulb").setup({
 
 require('mini.diff').setup()
 
-
-
-local function fib(n)
-  if n <= 1 then
-    return n
-  end
-  return fib(n - 1) + fib(n - 2)
-end
-
--- Here be AI stuff
+-- AI/Codecompanion setup
 vim.g.codecompanion_auto_tool_mode = true
 require("codecompanion").setup {
   display = {
@@ -880,9 +790,7 @@ require("codecompanion").setup {
           api_key = "cmd:op read op://personal/hsr6sue7y35hztd3gm5l3ojr6e/credential --no-newline",
         },
         schema = {
-          extended_thinking = {
-            default = false,
-          },
+          extended_thinking = { default = false },
         },
       })
     end,
@@ -896,12 +804,8 @@ require("codecompanion").setup {
       show_settings = false,
       show_tools_processing = true
     },
-    inline = {
-      adapter = "anthropic",
-    },
-    cmd = {
-      adapter = "anthropic",
-    }
+    inline = { adapter = "anthropic" },
+    cmd = { adapter = "anthropic" }
   },
   extensions = {
     fidget_progress = {
@@ -936,9 +840,7 @@ require("codecompanion").setup {
             return progress.handle.create({
               title = " Requesting assistance (" .. strategy .. ")",
               message = "In progress...",
-              lsp_client = {
-                name = llm_role_title(request.data.adapter),
-              },
+              lsp_client = { name = llm_role_title(request.data.adapter) },
             })
           end
 
@@ -975,10 +877,8 @@ require("codecompanion").setup {
             end,
           })
         end,
-
         exports = {
           clear_handles = function()
-            -- Optional: function to clear all progress handles if needed
             vim.api.nvim_del_augroup_by_name("CodeCompanionFidgetHooks")
           end
         }
@@ -987,7 +887,7 @@ require("codecompanion").setup {
   }
 }
 
--- configure vim-test
+-- vim-test configuration
 map("n", "<space>tf", ":TestFile<cr>", { silent = true })
 map("n", "<space>tn", ":TestNearest<cr>", { silent = true })
 map("n", "<space>tl", ":TestLast<cr>", { silent = true })
@@ -1001,26 +901,14 @@ vim.cmd [[
   let g:test#strategy = 'bufferterm'
 ]]
 
--- Jump to Phoenix location annotations from html like:
--- <!-- <DemoWeb.CoreComponents.button> lib/demo_web/components/core_components.ex:543 (demo) -->
--- Assumes you have copied the annotation to your clipboard.
--- Just hit ctrl-c with the html comment selected in the inspector.
+-- Phoenix jump helper
 function PhoenixJumpFromClipboard()
-  -- Get clipboard content
   local clipboard = vim.fn.getreg "+"
-
-  -- Pattern to match file path and line number
-  -- Looks for lib/path/file.ext:123 pattern
   local pattern = "([%w%._/-]+%.%w+):(%d+)"
-
-  -- Extract file path and line number
   local file_path, line_number = string.match(clipboard, pattern)
 
   if file_path and line_number then
-    -- Convert line number to integer
     line_number = tonumber(line_number)
-
-    -- Try to open the file
     local ok, err = pcall(function()
       vim.cmd("edit " .. file_path)
       vim.api.nvim_win_set_cursor(0, { line_number, 0 })
@@ -1037,311 +925,78 @@ function PhoenixJumpFromClipboard()
 end
 
 vim.api.nvim_create_user_command("PhoenixJump", PhoenixJumpFromClipboard, {})
-
--- map phoenix jump to <leader>pj
 vim.keymap.set("n", "<leader>pj", PhoenixJumpFromClipboard, { desc = "Phoenix jump" })
 
 vim.cmd.source("~/.config/nvim/ranger.vim")
 map("n", "-", "<cmd>Ranger<CR>", { desc = "Open ranger" })
 
+-- FINAL SECTION - RESOLVED CONFLICT: Include both flash and auto-hover features
+
+-- Mini.files setup
 require('mini.files').setup()
 
--- todo: try https://github.com/folke/flash.nvim/issues/343
----@type Flash.Config
--- require("flash").setup {
---   jump = {
---     history = true,
---     register = true,
---   },
---   modes = {
---     search = {
---       enabled = false
---     }
---   }
--- }
-
-
--- {
---   -- labels = "abcdefghijklmnopqrstuvwxyz",
---   labels = "asdfghjklqwertyuiopzxcvbnm",
---   search = {
---     -- search/jump in all windows
---     multi_window = true,
---     -- search direction
---     forward = true,
---     -- when `false`, find only matches in the given direction
---     wrap = true,
---     ---@type Flash.Pattern.Mode
---     -- Each mode will take ignorecase and smartcase into account.
---     -- * exact: exact match
---     -- * search: regular search
---     -- * fuzzy: fuzzy search
---     -- * fun(str): custom function that returns a pattern
---     --   For example, to only match at the beginning of a word:
---     --   mode = function(str)
---     --     return "\\<" .. str
---     --   end,
---     mode = "exact",
---     -- behave like `incsearch`
---     incremental = false,
---     -- Excluded filetypes and custom window filters
---     ---@type (string|fun(win:window))[]
---     exclude = {
---       "notify",
---       "cmp_menu",
---       "noice",
---       "flash_prompt",
---       function(win)
---         -- exclude non-focusable windows
---         return not vim.api.nvim_win_get_config(win).focusable
---       end,
---     },
---     -- Optional trigger character that needs to be typed before
---     -- a jump label can be used. It's NOT recommended to set this,
---     -- unless you know what you're doing
---     trigger = "",
---     -- max pattern length. If the pattern length is equal to this
---     -- labels will no longer be skipped. When it exceeds this length
---     -- it will either end in a jump or terminate the search
---     max_length = false, ---@type number|false
---   },
---   jump = {
---     -- save location in the jumplist
---     jumplist = true,
---     -- jump position
---     pos = "start", ---@type "start" | "end" | "range"
---     -- add pattern to search history
---     history = false,
---     -- add pattern to search register
---     register = false,
---     -- clear highlight after jump
---     nohlsearch = false,
---     -- automatically jump when there is only one match
---     autojump = false,
---     -- You can force inclusive/exclusive jumps by setting the
---     -- `inclusive` option. By default it will be automatically
---     -- set based on the mode.
---     inclusive = nil, ---@type boolean?
---     -- jump position offset. Not used for range jumps.
---     -- 0: default
---     -- 1: when pos == "end" and pos < current position
---     offset = nil, ---@type number
---   },
---   label = {
---     -- allow uppercase labels
---     uppercase = true,
---     -- add any labels with the correct case here, that you want to exclude
---     exclude = "",
---     -- add a label for the first match in the current window.
---     -- you can always jump to the first match with `<CR>`
---     current = true,
---     -- show the label after the match
---     after = true, ---@type boolean|number[]
---     -- show the label before the match
---     before = false, ---@type boolean|number[]
---     -- position of the label extmark
---     style = "overlay", ---@type "eol" | "overlay" | "right_align" | "inline"
---     -- flash tries to re-use labels that were already assigned to a position,
---     -- when typing more characters. By default only lower-case labels are re-used.
---     reuse = "lowercase", ---@type "lowercase" | "all" | "none"
---     -- for the current window, label targets closer to the cursor first
---     distance = true,
---     -- minimum pattern length to show labels
---     -- Ignored for custom labelers.
---     min_pattern_length = 0,
---     -- Enable this to use rainbow colors to highlight labels
---     -- Can be useful for visualizing Treesitter ranges.
---     rainbow = {
---       enabled = false,
---       -- number between 1 and 9
---       shade = 5,
---     },
---     -- With `format`, you can change how the label is rendered.
---     -- Should return a list of `[text, highlight]` tuples.
---     ---@class Flash.Format
---     ---@field state Flash.State
---     ---@field match Flash.Match
---     ---@field hl_group string
---     ---@field after boolean
---     ---@type fun(opts:Flash.Format): string[][]
---     format = function(opts)
---       return { { opts.match.label, opts.hl_group } }
---     end,
---   },
---   highlight = {
---     -- show a backdrop with hl FlashBackdrop
---     backdrop = true,
---     -- Highlight the search matches
---     matches = true,
---     -- extmark priority
---     priority = 5000,
---     groups = {
---       match = "FlashMatch",
---       current = "FlashCurrent",
---       backdrop = "FlashBackdrop",
---       label = "FlashLabel",
---     },
---   },
---   -- action to perform when picking a label.
---   -- defaults to the jumping logic depending on the mode.
---   ---@type fun(match:Flash.Match, state:Flash.State)|nil
---   action = nil,
---   -- initial pattern to use when opening flash
---   pattern = "",
---   -- When `true`, flash will try to continue the last search
---   continue = false,
---   -- Set config to a function to dynamically change the config
---   config = nil, ---@type fun(opts:Flash.Config)|nil
---   -- You can override the default options for a specific mode.
---   -- Use it with `require("flash").jump({mode = "forward"})`
---   ---@type table<string, Flash.Config>
---   modes = {
---     -- options used when flash is activated through
---     -- a regular search with `/` or `?`
---     search = {
---       -- when `true`, flash will be activated during regular search by default.
---       -- You can always toggle when searching with `require("flash").toggle()`
---       enabled = false,
---       highlight = { backdrop = false },
---       jump = { history = true, register = true, nohlsearch = true },
---       search = {
---         -- `forward` will be automatically set to the search direction
---         -- `mode` is always set to `search`
---         -- `incremental` is set to `true` when `incsearch` is enabled
---       },
---     },
---     -- options used when flash is activated through
---     -- `f`, `F`, `t`, `T`, `;` and `,` motions
---     char = {
---       enabled = true,
---       -- dynamic configuration for ftFT motions
---       config = function(opts)
---         -- autohide flash when in operator-pending mode
---         opts.autohide = opts.autohide or (vim.fn.mode(true):find("no") and vim.v.operator == "y")
---
---         -- disable jump labels when not enabled, when using a count,
---         -- or when recording/executing registers
---         opts.jump_labels = opts.jump_labels
---           and vim.v.count == 0
---           and vim.fn.reg_executing() == ""
---           and vim.fn.reg_recording() == ""
---
---         -- Show jump labels only in operator-pending mode
---         -- opts.jump_labels = vim.v.count == 0 and vim.fn.mode(true):find("o")
---       end,
---       -- hide after jump when not using jump labels
---       autohide = false,
---       -- show jump labels
---       jump_labels = false,
---       -- set to `false` to use the current line only
---       multi_line = true,
---       -- When using jump labels, don't use these keys
---       -- This allows using those keys directly after the motion
---       label = { exclude = "hjkliardc" },
---       -- by default all keymaps are enabled, but you can disable some of them,
---       -- by removing them from the list.
---       -- If you rather use another key, you can map them
---       -- to something else, e.g., { [";"] = "L", [","] = H }
---       keys = { "f", "F", "t", "T", ";", "," },
---       ---@alias Flash.CharActions table<string, "next" | "prev" | "right" | "left">
---       -- The direction for `prev` and `next` is determined by the motion.
---       -- `left` and `right` are always left and right.
---       char_actions = function(motion)
---         return {
---           [";"] = "next", -- set to `right` to always go right
---           [","] = "prev", -- set to `left` to always go left
---           -- clever-f style
---           [motion:lower()] = "next",
---           [motion:upper()] = "prev",
---           -- jump2d style: same case goes next, opposite case goes prev
---           -- [motion] = "next",
---           -- [motion:match("%l") and motion:upper() or motion:lower()] = "prev",
---         }
---       end,
---       search = { wrap = false },
---       highlight = { backdrop = true },
---       jump = {
---         register = false,
---         -- when using jump labels, set to 'true' to automatically jump
---         -- or execute a motion when there is only one match
---         autojump = false,
---       },
---     },
---     -- options used for treesitter selections
---     -- `require("flash").treesitter()`
---     treesitter = {
---       labels = "abcdefghijklmnopqrstuvwxyz",
---       jump = { pos = "range", autojump = true },
---       search = { incremental = false },
---       label = { before = true, after = true, style = "inline" },
---       highlight = {
---         backdrop = false,
---         matches = false,
---       },
---     },
---     treesitter_search = {
---       jump = { pos = "range" },
---       search = { multi_window = true, wrap = true, incremental = false },
---       remote_op = { restore = true },
---       label = { before = true, after = true, style = "inline" },
---     },
---     -- options used for remote flash
---     remote = {
---       remote_op = { restore = true, motion = true },
---     },
---   },
---   -- options for the floating window that shows the prompt,
---   -- for regular jumps
---   -- `require("flash").prompt()` is always available to get the prompt text
---   prompt = {
---     enabled = true,
---     prefix = { { "⚡", "FlashPromptIcon" } },
---     win_config = {
---       relative = "editor",
---       width = 1, -- when <=1 it's a percentage of the editor width
---       height = 1,
---       row = -1, -- when negative it's an offset from the bottom
---       col = 0, -- when negative it's an offset from the right
---       zindex = 1000,
---     },
---   },
---   -- options for remote operator pending mode
---   remote_op = {
---     -- restore window views and cursor position
---     -- after doing a remote operation
---     restore = false,
---     -- For `jump.pos = "range"`, this setting is ignored.
---     -- `true`: always enter a new motion when doing a remote operation
---     -- `false`: use the window's cursor position and jump target
---     -- `nil`: act as `true` for remote windows, `false` for the current window
---     motion = false,
---   },
--- }
---
-
--- { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
--- { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
--- { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
--- { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
--- { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
-
--- vim.keymap.set({ "n", "x", "o" }, "<enter>", function() require("flash").jump() end, { desc = "Flash" })
-
+-- Flash setup with conservative settings
 local disable_flash = {
-  "quickfix",
-  "loclist",
-  "terminal",
-  "prompt",
-  "nofile",
-  "help"
+  "quickfix", "loclist", "terminal", "prompt", "nofile", "help"
 }
 
 vim.keymap.set({ "n", "x", "o" }, "<enter>", function()
   local buftype = vim.bo.buftype
   if vim.tbl_contains(disable_flash, buftype) then
-    -- Execute default <enter> behavior
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<enter>", true, false, true), "n", false)
   else
     require("flash").jump()
   end
 end, { desc = "Flash" })
+
+-- Auto-hover functionality (optional, starts disabled)
+vim.pack.add({ "https://github.com/sj2tpgk/nvim-eldoc" })
+require("nvim-eldoc").setup()
+
+local auto_hover_enabled = false -- Start disabled to avoid noise
+local lsp_hover_augroup = vim.api.nvim_create_augroup("LspHoverOnHold", { clear = true })
+
+vim.api.nvim_create_autocmd("CursorHold", {
+  group = lsp_hover_augroup,
+  pattern = "*",
+  callback = function()
+    if not auto_hover_enabled then return end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    local clients = vim.lsp.get_clients { bufnr = bufnr }
+
+    local has_hover_provider = false
+    for _, client in ipairs(clients) do
+      if client and client.server_capabilities and client.server_capabilities.hoverProvider then
+        has_hover_provider = true
+        break
+      end
+    end
+
+    if not has_hover_provider then return end
+
+    local handler = function(err, result, _, _)
+      if err or not result or not result.contents then return end
+      local lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+      if vim.tbl_isempty(lines) then return end
+
+      vim.lsp.util.open_floating_preview(lines, "markdown", {
+        border = "rounded",
+        relative = "editor",
+        offset_x = vim.o.columns,
+      })
+    end
+
+    local params = vim.lsp.util.make_position_params(0, "utf-32")
+    vim.lsp.buf_request(bufnr, "textDocument/hover", params, handler)
+  end,
+})
+
+-- Toggle function for auto-hover
+local function toggle_auto_hover()
+  auto_hover_enabled = not auto_hover_enabled
+  local status = auto_hover_enabled and "enabled" or "disabled"
+  vim.notify("Auto Hover " .. status, vim.log.levels.INFO, { title = "LSP" })
+end
+
+vim.keymap.set("n", "<leader>tah", toggle_auto_hover, { desc = "Toggle LSP auto hover" })
