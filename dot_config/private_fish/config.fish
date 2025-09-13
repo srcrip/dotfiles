@@ -1,7 +1,7 @@
 # abbreviations and aliases
 alias vim="nvim"
-alias q="ranger"
 alias ls="eza"
+alias la="eza -lah"
 
 # editing my most often used files
 alias vimrc="nvim ~/.config/nvim/init.lua"
@@ -14,6 +14,18 @@ abbr --add cme "nvim (fd . (chezmoi source-path) | fzf)"
 
 set -x EDITOR nvim
 set -x VISUAL nvim
+
+function ranger-cd
+    set tempfile (mktemp)
+    ranger --choosedir=$tempfile
+    set ranger_pwd (cat $tempfile)
+    if test -d "$ranger_pwd"
+        cd "$ranger_pwd"
+    end
+    rm -f $tempfile
+end
+
+alias q="ranger-cd"
 
 # see: https://asdf-vm.com/guide/getting-started.html
 # ASDF configuration code
@@ -34,3 +46,19 @@ set --erase _asdf_shims
 if test -f /opt/homebrew/share/google-cloud-sdk/path.fish.inc
     source /opt/homebrew/share/google-cloud-sdk/path.fish.inc
 end
+
+# zoxide init fish | source
+
+abbr --add g "git"
+# if on a feature branch, this shows all commits sense the branching point
+abbr --add gdfb "git diff --merge-base"
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+
+zoxide init fish | source
+
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH
